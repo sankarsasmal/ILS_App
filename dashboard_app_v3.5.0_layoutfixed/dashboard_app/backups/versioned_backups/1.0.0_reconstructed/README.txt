@@ -1,0 +1,1 @@
+The physical v1.0.0 project folder was not accessible to the execution environment. This marker preserves the rollback version identity. Use your existing OneDrive v1.0.0 folder as the authoritative rollback copy.

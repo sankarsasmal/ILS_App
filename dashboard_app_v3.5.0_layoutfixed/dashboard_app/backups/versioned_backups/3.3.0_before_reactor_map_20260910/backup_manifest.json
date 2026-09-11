@@ -1,0 +1,22 @@
+{
+  "rollback_version": "3.3.0",
+  "candidate_version": "3.4.0",
+  "backup_created": "2026-09-10",
+  "source_archive": "dashboard_app_v3.3.0.zip",
+  "change": "Add Reactor Map tab linked to a themed valve-opening dashboard",
+  "files_modified": [
+    "frontend/index.html",
+    "frontend/css/dashboard.css",
+    "frontend/js/dashboard.js",
+    "VERSION",
+    "CHANGELOG.md",
+    "README.md",
+    "documentation/Dashboard_Technical_Documentation.docx",
+    "tests/test_app.py",
+    "tests/test_headers.py"
+  ],
+  "files_added": [
+    "frontend/reactor_map.html",
+    "scripts/ValveOpening.py"
+  ]
+}

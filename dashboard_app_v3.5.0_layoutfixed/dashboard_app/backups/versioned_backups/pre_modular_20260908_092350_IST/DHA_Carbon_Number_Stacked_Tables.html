@@ -1,0 +1,4303 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>DHA Carbon Distribution Dashboard</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            background-color: #f4f6f8;
+            color: #263238;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .dashboard-container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .header-card {
+            padding: 24px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            background: linear-gradient(
+                135deg,
+                #003c71,
+                #0078a8
+            );
+            color: white;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+        }
+
+        .header-card h1 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+        }
+
+        .header-card p {
+            margin: 0;
+            color: #e2f3fb;
+            font-size: 14px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(180px, 1fr)
+            );
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            padding: 18px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .summary-label {
+            margin-bottom: 6px;
+            color: #607d8b;
+            font-size: 13px;
+        }
+
+        .summary-value {
+            color: #003c71;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .control-panel {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 18px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .control-group label {
+            color: #455a64;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        select,
+        input {
+            min-width: 230px;
+            padding: 10px 12px;
+            border: 1px solid #bcc7cd;
+            border-radius: 6px;
+            background-color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        select:focus,
+        input:focus {
+            border-color: #0078a8;
+            box-shadow: 0 0 0 3px rgba(0, 120, 168, 0.12);
+        }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            background-color: #0078a8;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #005f86;
+        }
+
+        .content-card {
+            overflow: hidden;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .table-title {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 16px 20px;
+            border-bottom: 1px solid #dfe5e8;
+        }
+
+        .table-title h2 {
+            margin: 0;
+            color: #003c71;
+            font-size: 19px;
+        }
+
+        .table-counter {
+            color: #607d8b;
+            font-size: 13px;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .table-container {
+            display: none;
+        }
+
+        .table-container.active {
+            display: block;
+        }
+
+        table.data-table {
+            width: 100%;
+            min-width: 1400px;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: white;
+            font-size: 13px;
+        }
+
+        table.data-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            padding: 11px 10px;
+            border-right: 1px solid #376b93;
+            border-bottom: 1px solid #376b93;
+            background-color: #1f4e78;
+            color: white;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        table.data-table tbody td {
+            padding: 9px 10px;
+            border-right: 1px solid #e0e5e8;
+            border-bottom: 1px solid #e0e5e8;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        table.data-table tbody td:nth-child(1),
+        table.data-table tbody td:nth-child(2),
+        table.data-table tbody td:nth-child(3) {
+            text-align: left;
+        }
+
+        table.data-table tbody tr:nth-child(even) {
+            background-color: #f8fafb;
+        }
+
+        table.data-table tbody tr:hover {
+            background-color: #e8f5fb;
+        }
+
+        .hidden-row {
+            display: none;
+        }
+
+        .message {
+            display: none;
+            padding: 25px;
+            color: #607d8b;
+            text-align: center;
+        }
+
+        .message.visible {
+            display: block;
+        }
+
+        .footer {
+            padding: 18px 5px;
+            color: #78909c;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        @media (max-width: 700px) {
+
+            body {
+                padding: 12px;
+            }
+
+            .header-card {
+                padding: 18px;
+            }
+
+            .header-card h1 {
+                font-size: 22px;
+            }
+
+            .control-panel {
+                align-items: stretch;
+            }
+
+            .control-group,
+            select,
+            input,
+            button {
+                width: 100%;
+                min-width: 100%;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+
+        <div class="header-card">
+
+            <h1>DHA Carbon Distribution Dashboard</h1>
+
+            <p>
+                Carbon number distribution extracted from
+                CARBON_TABULAR(%WGT), range C3:H18
+            </p>
+
+        </div>
+
+
+        <div class="summary-grid">
+
+            <div class="summary-card">
+
+                <div class="summary-label">
+                    XLS files found
+                </div>
+
+                <div class="summary-value">
+                    31
+                </div>
+
+            </div>
+
+
+            <div class="summary-card">
+
+                <div class="summary-label">
+                    Successfully processed
+                </div>
+
+                <div class="summary-value">
+                    31
+                </div>
+
+            </div>
+
+
+            <div class="summary-card">
+
+                <div class="summary-label">
+                    Failed files
+                </div>
+
+                <div class="summary-value">
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="summary-card">
+
+                <div class="summary-label">
+                    Carbon range
+                </div>
+
+                <div class="summary-value">
+                    C1-C15
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="control-panel">
+
+            <div class="control-group">
+
+                <label for="componentSelector">
+                    Select component
+                </label>
+
+                <select id="componentSelector">
+
+                    <option value="Paraffin">
+                        Paraffin
+                    </option>
+
+                    <option value="I-Paraffins">
+                        I-Paraffins
+                    </option>
+
+                    <option value="Aromatics">
+                        Aromatics
+                    </option>
+
+                    <option value="Naphthenes">
+                        Naphthenes
+                    </option>
+
+                    <option value="Olefins">
+                        Olefins
+                    </option>
+
+                    <option value="Metadata">
+                        Metadata
+                    </option>
+
+                    <option value="Processing-Log">
+                        Processing Log
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="control-group">
+
+                <label for="searchBox">
+                    Search active table
+                </label>
+
+                <input
+                    type="text"
+                    id="searchBox"
+                    placeholder="Search file name, UID or value..."
+                >
+
+            </div>
+
+
+            <button
+                type="button"
+                id="clearSearchButton"
+            >
+                Clear Search
+            </button>
+
+        </div>
+
+
+        <div class="content-card">
+
+            <div class="table-title">
+
+                <h2 id="activeTableTitle">
+                    Paraffin
+                </h2>
+
+                <div
+                    id="tableCounter"
+                    class="table-counter"
+                >
+                </div>
+
+            </div>
+
+
+            <div class="table-scroll">
+
+                <div
+                    id="Paraffin"
+                    class="table-container active"
+                >
+                    <table class="dataframe data-table" id="table_paraffin">
+  <thead>
+    <tr style="text-align: right;">
+      <th>File Name</th>
+      <th>DateTime</th>
+      <th>UID</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+      <th>13</th>
+      <th>14</th>
+      <th>15</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>R17_C1_S1_001_2026-09-04 14-48-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 14:48</td>
+      <td>R17_C1_S1_001</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.007726</td>
+      <td>0.299135</td>
+      <td>2.444471</td>
+      <td>71.088577</td>
+      <td>11.583238</td>
+      <td>4.717877</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_002_2026-09-04 17-59-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 17:59</td>
+      <td>R17_C1_S1_002</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.244854</td>
+      <td>0.242958</td>
+      <td>0.768862</td>
+      <td>74.963379</td>
+      <td>8.952865</td>
+      <td>3.400325</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_003_2026-09-04 20-03-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 20:03</td>
+      <td>R17_C1_S1_003</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.021794</td>
+      <td>0.044414</td>
+      <td>0.255882</td>
+      <td>79.708313</td>
+      <td>8.921880</td>
+      <td>3.379377</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_004_2026-09-04 22-07-54 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 22:07</td>
+      <td>R17_C1_S1_004</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.257408</td>
+      <td>0.175340</td>
+      <td>0.109448</td>
+      <td>70.592636</td>
+      <td>5.540738</td>
+      <td>1.134203</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_005_2026-09-05 00-11-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 00:11</td>
+      <td>R17_C1_S1_005</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.002897</td>
+      <td>0.008518</td>
+      <td>0.058614</td>
+      <td>84.030350</td>
+      <td>10.138721</td>
+      <td>4.868464</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_006_2026-09-05 02-15-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 02:15</td>
+      <td>R17_C1_S1_006</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.003902</td>
+      <td>0.006013</td>
+      <td>0.037982</td>
+      <td>84.082298</td>
+      <td>10.160175</td>
+      <td>4.910937</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_007_2026-09-05 04-19-57 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 04:19</td>
+      <td>R17_C1_S1_007</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.000735</td>
+      <td>0.004034</td>
+      <td>0.030954</td>
+      <td>84.009003</td>
+      <td>10.152667</td>
+      <td>4.897840</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_008_2026-09-05 06-23-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 06:23</td>
+      <td>R17_C1_S1_008</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.003112</td>
+      <td>0.024516</td>
+      <td>84.011765</td>
+      <td>10.180597</td>
+      <td>5.007684</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_009_2026-09-05 08-28-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 08:28</td>
+      <td>R17_C1_S1_009</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.003077</td>
+      <td>0.024553</td>
+      <td>84.121422</td>
+      <td>10.157191</td>
+      <td>4.944080</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_010_2026-09-05 10-32-03 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 10:32</td>
+      <td>R17_C1_S1_010</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.283052</td>
+      <td>0.204745</td>
+      <td>0.280885</td>
+      <td>77.615112</td>
+      <td>8.617266</td>
+      <td>3.418533</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_011_2026-09-05 12-35-59 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 12:35</td>
+      <td>R17_C1_S1_011</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.017779</td>
+      <td>0.014041</td>
+      <td>0.025379</td>
+      <td>81.453384</td>
+      <td>8.999023</td>
+      <td>3.583339</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_012_2026-09-05 14-40-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 14:40</td>
+      <td>R17_C1_S1_012</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.162108</td>
+      <td>0.114625</td>
+      <td>0.028423</td>
+      <td>73.857262</td>
+      <td>6.218045</td>
+      <td>1.477539</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_013_2026-09-05 16-44-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 16:44</td>
+      <td>R17_C1_S1_013</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.001725</td>
+      <td>0.003373</td>
+      <td>0.019434</td>
+      <td>84.133186</td>
+      <td>10.162189</td>
+      <td>4.946948</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_014_2026-09-05 18-48-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 18:48</td>
+      <td>R17_C1_S1_014</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.002954</td>
+      <td>0.003643</td>
+      <td>0.020658</td>
+      <td>84.140060</td>
+      <td>10.145134</td>
+      <td>4.953861</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_015_2026-09-05 20-52-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 20:52</td>
+      <td>R17_C1_S1_015</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.000744</td>
+      <td>0.002473</td>
+      <td>0.017604</td>
+      <td>84.043144</td>
+      <td>10.123784</td>
+      <td>4.954729</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_016_2026-09-05 22-56-09 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 22:56</td>
+      <td>R17_C1_S1_016</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.002123</td>
+      <td>0.017061</td>
+      <td>84.046562</td>
+      <td>10.165708</td>
+      <td>5.030727</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_017_2026-09-06 01-00-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 01:00</td>
+      <td>R17_C1_S1_017</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.002373</td>
+      <td>0.019543</td>
+      <td>84.125671</td>
+      <td>10.150469</td>
+      <td>4.976509</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_018_2026-09-06 03-04-13 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 03:04</td>
+      <td>R17_C1_S1_018</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.331261</td>
+      <td>0.235926</td>
+      <td>0.316978</td>
+      <td>77.148247</td>
+      <td>8.531352</td>
+      <td>3.400881</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_019_2026-09-06 05-08-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 05:08</td>
+      <td>R17_C1_S1_019</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.018243</td>
+      <td>0.014362</td>
+      <td>0.020955</td>
+      <td>81.335938</td>
+      <td>8.910705</td>
+      <td>3.512739</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_020_2026-09-06 07-12-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 07:12</td>
+      <td>R17_C1_S1_020</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.163410</td>
+      <td>0.115369</td>
+      <td>0.025028</td>
+      <td>73.757980</td>
+      <td>6.181214</td>
+      <td>1.455769</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_021_2026-09-06 09-16-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 09:16</td>
+      <td>R17_C1_S1_021</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.002117</td>
+      <td>0.003650</td>
+      <td>0.017125</td>
+      <td>84.110397</td>
+      <td>10.159266</td>
+      <td>4.982789</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_022_2026-09-06 11-20-16 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 11:20</td>
+      <td>R17_C1_S1_022</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.008905</td>
+      <td>0.006859</td>
+      <td>0.020378</td>
+      <td>83.504509</td>
+      <td>10.252343</td>
+      <td>5.471946</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_023_2026-09-06 13-24-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 13:24</td>
+      <td>R17_C1_S1_023</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.003769</td>
+      <td>0.003615</td>
+      <td>0.016674</td>
+      <td>83.668884</td>
+      <td>9.982077</td>
+      <td>4.788754</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_024_2026-09-06 15-28-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 15:28</td>
+      <td>R17_C1_S1_024</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.001255</td>
+      <td>0.002394</td>
+      <td>0.015334</td>
+      <td>84.055717</td>
+      <td>10.133484</td>
+      <td>4.970448</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_025_2026-09-06 17-32-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 17:32</td>
+      <td>R17_C1_S1_025</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.002213</td>
+      <td>0.017039</td>
+      <td>84.064064</td>
+      <td>10.182124</td>
+      <td>5.019197</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_026_2026-09-06 19-36-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 19:36</td>
+      <td>R17_C1_S1_026</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.999897</td>
+      <td>0.669365</td>
+      <td>0.684770</td>
+      <td>64.536415</td>
+      <td>5.655893</td>
+      <td>1.325297</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_027_2026-09-06 21-40-26 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 21:40</td>
+      <td>R17_C1_S1_027</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.202856</td>
+      <td>0.151315</td>
+      <td>0.031010</td>
+      <td>68.947815</td>
+      <td>4.998760</td>
+      <td>0.930358</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_028_2026-09-06 23-44-27 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 23:44</td>
+      <td>R17_C1_S1_028</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>1.384283</td>
+      <td>0.628526</td>
+      <td>0.073238</td>
+      <td>42.368824</td>
+      <td>1.557334</td>
+      <td>0.128530</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_029_2026-09-07 01-48-28 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 01:48</td>
+      <td>R17_C1_S1_029</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.010676</td>
+      <td>0.009230</td>
+      <td>0.020690</td>
+      <td>84.050217</td>
+      <td>10.155958</td>
+      <td>4.993965</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_030_2026-09-07 03-52-30 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 03:52</td>
+      <td>R17_C1_S1_030</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.015147</td>
+      <td>0.009659</td>
+      <td>0.021115</td>
+      <td>84.068344</td>
+      <td>10.148742</td>
+      <td>4.991156</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_031_2026-09-07 05-56-31 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 05:56</td>
+      <td>R17_C1_S1_031</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.003374</td>
+      <td>0.003433</td>
+      <td>0.015425</td>
+      <td>83.702667</td>
+      <td>9.966281</td>
+      <td>4.758935</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+
+
+                <div
+                    id="I-Paraffins"
+                    class="table-container"
+                >
+                    <table class="dataframe data-table" id="table_i_paraffins">
+  <thead>
+    <tr style="text-align: right;">
+      <th>File Name</th>
+      <th>DateTime</th>
+      <th>UID</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+      <th>13</th>
+      <th>14</th>
+      <th>15</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>R17_C1_S1_001_2026-09-04 14-48-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 14:48</td>
+      <td>R17_C1_S1_001</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.053906</td>
+      <td>1.429011</td>
+      <td>2.717613</td>
+      <td>2.640057</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_002_2026-09-04 17-59-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 17:59</td>
+      <td>R17_C1_S1_002</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.821713</td>
+      <td>0.864913</td>
+      <td>5.650998</td>
+      <td>1.390939</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_003_2026-09-04 20-03-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 20:03</td>
+      <td>R17_C1_S1_003</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.040171</td>
+      <td>0.160557</td>
+      <td>3.568047</td>
+      <td>1.500659</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_004_2026-09-04 22-07-54 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 22:07</td>
+      <td>R17_C1_S1_004</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.750632</td>
+      <td>0.265697</td>
+      <td>13.270088</td>
+      <td>3.539068</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_005_2026-09-05 00-11-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 00:11</td>
+      <td>R17_C1_S1_005</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.001967</td>
+      <td>0.033723</td>
+      <td>0.472877</td>
+      <td>0.094954</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_006_2026-09-05 02-15-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 02:15</td>
+      <td>R17_C1_S1_006</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.001231</td>
+      <td>0.021107</td>
+      <td>0.449252</td>
+      <td>0.067880</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_007_2026-09-05 04-19-57 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 04:19</td>
+      <td>R17_C1_S1_007</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.001066</td>
+      <td>0.017597</td>
+      <td>0.507386</td>
+      <td>0.089709</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_008_2026-09-05 06-23-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 06:23</td>
+      <td>R17_C1_S1_008</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.000862</td>
+      <td>0.013984</td>
+      <td>0.443804</td>
+      <td>0.057082</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_009_2026-09-05 08-28-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 08:28</td>
+      <td>R17_C1_S1_009</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.000913</td>
+      <td>0.014112</td>
+      <td>0.435886</td>
+      <td>0.054254</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_010_2026-09-05 10-32-03 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 10:32</td>
+      <td>R17_C1_S1_010</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.906986</td>
+      <td>0.654000</td>
+      <td>5.232426</td>
+      <td>0.848395</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_011_2026-09-05 12-35-59 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 12:35</td>
+      <td>R17_C1_S1_011</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.022078</td>
+      <td>0.018879</td>
+      <td>2.835813</td>
+      <td>1.096803</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_012_2026-09-05 14-40-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 14:40</td>
+      <td>R17_C1_S1_012</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.485913</td>
+      <td>0.153669</td>
+      <td>10.216657</td>
+      <td>3.092679</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_013_2026-09-05 16-44-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 16:44</td>
+      <td>R17_C1_S1_013</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.000679</td>
+      <td>0.011055</td>
+      <td>0.432988</td>
+      <td>0.048260</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_014_2026-09-05 18-48-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 18:48</td>
+      <td>R17_C1_S1_014</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.000683</td>
+      <td>0.011294</td>
+      <td>0.433364</td>
+      <td>0.048894</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_015_2026-09-05 20-52-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 20:52</td>
+      <td>R17_C1_S1_015</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.000910</td>
+      <td>0.009908</td>
+      <td>0.495336</td>
+      <td>0.075939</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_016_2026-09-05 22-56-09 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 22:56</td>
+      <td>R17_C1_S1_016</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.000684</td>
+      <td>0.009763</td>
+      <td>0.437984</td>
+      <td>0.049155</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_017_2026-09-06 01-00-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 01:00</td>
+      <td>R17_C1_S1_017</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.000701</td>
+      <td>0.010916</td>
+      <td>0.430419</td>
+      <td>0.048225</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_018_2026-09-06 03-04-13 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 03:04</td>
+      <td>R17_C1_S1_018</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>1.050847</td>
+      <td>0.773289</td>
+      <td>5.415889</td>
+      <td>0.842041</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_019_2026-09-06 05-08-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 05:08</td>
+      <td>R17_C1_S1_019</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.024544</td>
+      <td>0.017302</td>
+      <td>2.977661</td>
+      <td>1.149674</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_020_2026-09-06 07-12-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 07:12</td>
+      <td>R17_C1_S1_020</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.491989</td>
+      <td>0.152619</td>
+      <td>10.310162</td>
+      <td>3.118493</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_021_2026-09-06 09-16-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 09:16</td>
+      <td>R17_C1_S1_021</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.000739</td>
+      <td>0.009447</td>
+      <td>0.431218</td>
+      <td>0.045753</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_022_2026-09-06 11-20-16 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 11:20</td>
+      <td>R17_C1_S1_022</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.000615</td>
+      <td>0.009215</td>
+      <td>0.430170</td>
+      <td>0.047516</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_023_2026-09-06 13-24-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 13:24</td>
+      <td>R17_C1_S1_023</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.002120</td>
+      <td>0.009483</td>
+      <td>0.825526</td>
+      <td>0.216600</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_024_2026-09-06 15-28-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 15:28</td>
+      <td>R17_C1_S1_024</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.000822</td>
+      <td>0.008340</td>
+      <td>0.482845</td>
+      <td>0.066555</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_025_2026-09-06 17-32-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 17:32</td>
+      <td>R17_C1_S1_025</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.009574</td>
+      <td>0.428727</td>
+      <td>0.045844</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_026_2026-09-06 19-36-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 19:36</td>
+      <td>R17_C1_S1_026</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>2.886338</td>
+      <td>1.845508</td>
+      <td>15.464598</td>
+      <td>2.172538</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_027_2026-09-06 21-40-26 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 21:40</td>
+      <td>R17_C1_S1_027</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.492428</td>
+      <td>0.168849</td>
+      <td>15.025219</td>
+      <td>3.980326</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_028_2026-09-06 23-44-27 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 23:44</td>
+      <td>R17_C1_S1_028</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>3.119882</td>
+      <td>0.775352</td>
+      <td>41.636990</td>
+      <td>4.369791</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_029_2026-09-07 01-48-28 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 01:48</td>
+      <td>R17_C1_S1_029</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.001754</td>
+      <td>0.008849</td>
+      <td>0.448856</td>
+      <td>0.050810</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_030_2026-09-07 03-52-30 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 03:52</td>
+      <td>R17_C1_S1_030</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.001180</td>
+      <td>0.008313</td>
+      <td>0.444295</td>
+      <td>0.049637</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_031_2026-09-07 05-56-31 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 05:56</td>
+      <td>R17_C1_S1_031</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.002383</td>
+      <td>0.008739</td>
+      <td>0.834405</td>
+      <td>0.219359</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+
+
+                <div
+                    id="Aromatics"
+                    class="table-container"
+                >
+                    <table class="dataframe data-table" id="table_aromatics">
+  <thead>
+    <tr style="text-align: right;">
+      <th>File Name</th>
+      <th>DateTime</th>
+      <th>UID</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+      <th>13</th>
+      <th>14</th>
+      <th>15</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>R17_C1_S1_001_2026-09-04 14-48-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 14:48</td>
+      <td>R17_C1_S1_001</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_002_2026-09-04 17-59-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 17:59</td>
+      <td>R17_C1_S1_002</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_003_2026-09-04 20-03-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 20:03</td>
+      <td>R17_C1_S1_003</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_004_2026-09-04 22-07-54 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 22:07</td>
+      <td>R17_C1_S1_004</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_005_2026-09-05 00-11-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 00:11</td>
+      <td>R17_C1_S1_005</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_006_2026-09-05 02-15-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 02:15</td>
+      <td>R17_C1_S1_006</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_007_2026-09-05 04-19-57 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 04:19</td>
+      <td>R17_C1_S1_007</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_008_2026-09-05 06-23-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 06:23</td>
+      <td>R17_C1_S1_008</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_009_2026-09-05 08-28-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 08:28</td>
+      <td>R17_C1_S1_009</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_010_2026-09-05 10-32-03 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 10:32</td>
+      <td>R17_C1_S1_010</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_011_2026-09-05 12-35-59 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 12:35</td>
+      <td>R17_C1_S1_011</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_012_2026-09-05 14-40-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 14:40</td>
+      <td>R17_C1_S1_012</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_013_2026-09-05 16-44-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 16:44</td>
+      <td>R17_C1_S1_013</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_014_2026-09-05 18-48-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 18:48</td>
+      <td>R17_C1_S1_014</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_015_2026-09-05 20-52-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 20:52</td>
+      <td>R17_C1_S1_015</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_016_2026-09-05 22-56-09 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 22:56</td>
+      <td>R17_C1_S1_016</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_017_2026-09-06 01-00-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 01:00</td>
+      <td>R17_C1_S1_017</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_018_2026-09-06 03-04-13 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 03:04</td>
+      <td>R17_C1_S1_018</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_019_2026-09-06 05-08-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 05:08</td>
+      <td>R17_C1_S1_019</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_020_2026-09-06 07-12-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 07:12</td>
+      <td>R17_C1_S1_020</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_021_2026-09-06 09-16-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 09:16</td>
+      <td>R17_C1_S1_021</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_022_2026-09-06 11-20-16 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 11:20</td>
+      <td>R17_C1_S1_022</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_023_2026-09-06 13-24-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 13:24</td>
+      <td>R17_C1_S1_023</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_024_2026-09-06 15-28-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 15:28</td>
+      <td>R17_C1_S1_024</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_025_2026-09-06 17-32-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 17:32</td>
+      <td>R17_C1_S1_025</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_026_2026-09-06 19-36-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 19:36</td>
+      <td>R17_C1_S1_026</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_027_2026-09-06 21-40-26 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 21:40</td>
+      <td>R17_C1_S1_027</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_028_2026-09-06 23-44-27 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 23:44</td>
+      <td>R17_C1_S1_028</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_029_2026-09-07 01-48-28 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 01:48</td>
+      <td>R17_C1_S1_029</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_030_2026-09-07 03-52-30 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 03:52</td>
+      <td>R17_C1_S1_030</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_031_2026-09-07 05-56-31 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 05:56</td>
+      <td>R17_C1_S1_031</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+
+
+                <div
+                    id="Naphthenes"
+                    class="table-container"
+                >
+                    <table class="dataframe data-table" id="table_naphthenes">
+  <thead>
+    <tr style="text-align: right;">
+      <th>File Name</th>
+      <th>DateTime</th>
+      <th>UID</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+      <th>13</th>
+      <th>14</th>
+      <th>15</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>R17_C1_S1_001_2026-09-04 14-48-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 14:48</td>
+      <td>R17_C1_S1_001</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.224891</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_002_2026-09-04 17-59-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 17:59</td>
+      <td>R17_C1_S1_002</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.099831</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_003_2026-09-04 20-03-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 20:03</td>
+      <td>R17_C1_S1_003</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.121032</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_004_2026-09-04 22-07-54 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 22:07</td>
+      <td>R17_C1_S1_004</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.091740</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_005_2026-09-05 00-11-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 00:11</td>
+      <td>R17_C1_S1_005</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.122034</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_006_2026-09-05 02-15-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 02:15</td>
+      <td>R17_C1_S1_006</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.122216</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_007_2026-09-05 04-19-57 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 04:19</td>
+      <td>R17_C1_S1_007</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.121206</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_008_2026-09-05 06-23-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 06:23</td>
+      <td>R17_C1_S1_008</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.121257</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_009_2026-09-05 08-28-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 08:28</td>
+      <td>R17_C1_S1_009</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.121543</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_010_2026-09-05 10-32-03 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 10:32</td>
+      <td>R17_C1_S1_010</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.081234</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_011_2026-09-05 12-35-59 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 12:35</td>
+      <td>R17_C1_S1_011</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.111613</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_012_2026-09-05 14-40-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 14:40</td>
+      <td>R17_C1_S1_012</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.092471</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_013_2026-09-05 16-44-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 16:44</td>
+      <td>R17_C1_S1_013</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.120856</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_014_2026-09-05 18-48-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 18:48</td>
+      <td>R17_C1_S1_014</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.121252</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_015_2026-09-05 20-52-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 20:52</td>
+      <td>R17_C1_S1_015</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.120056</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_016_2026-09-05 22-56-09 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 22:56</td>
+      <td>R17_C1_S1_016</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.120900</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_017_2026-09-06 01-00-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 01:00</td>
+      <td>R17_C1_S1_017</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.121564</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_018_2026-09-06 03-04-13 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 03:04</td>
+      <td>R17_C1_S1_018</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.081695</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_019_2026-09-06 05-08-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 05:08</td>
+      <td>R17_C1_S1_019</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.110900</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_020_2026-09-06 07-12-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 07:12</td>
+      <td>R17_C1_S1_020</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.092424</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_021_2026-09-06 09-16-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 09:16</td>
+      <td>R17_C1_S1_021</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.120270</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_022_2026-09-06 11-20-16 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 11:20</td>
+      <td>R17_C1_S1_022</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.120277</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_023_2026-09-06 13-24-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 13:24</td>
+      <td>R17_C1_S1_023</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.120719</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_024_2026-09-06 15-28-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 15:28</td>
+      <td>R17_C1_S1_024</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.120260</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_025_2026-09-06 17-32-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 17:32</td>
+      <td>R17_C1_S1_025</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.121087</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_026_2026-09-06 19-36-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 19:36</td>
+      <td>R17_C1_S1_026</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.074961</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_027_2026-09-06 21-40-26 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 21:40</td>
+      <td>R17_C1_S1_027</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.095075</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_028_2026-09-06 23-44-27 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 23:44</td>
+      <td>R17_C1_S1_028</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.087656</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_029_2026-09-07 01-48-28 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 01:48</td>
+      <td>R17_C1_S1_029</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.119612</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_030_2026-09-07 03-52-30 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 03:52</td>
+      <td>R17_C1_S1_030</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.120319</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_031_2026-09-07 05-56-31 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 05:56</td>
+      <td>R17_C1_S1_031</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>0.120757</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+
+
+                <div
+                    id="Olefins"
+                    class="table-container"
+                >
+                    <table class="dataframe data-table" id="table_olefins">
+  <thead>
+    <tr style="text-align: right;">
+      <th>File Name</th>
+      <th>DateTime</th>
+      <th>UID</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+      <th>13</th>
+      <th>14</th>
+      <th>15</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>R17_C1_S1_001_2026-09-04 14-48-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 14:48</td>
+      <td>R17_C1_S1_001</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_002_2026-09-04 17-59-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 17:59</td>
+      <td>R17_C1_S1_002</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_003_2026-09-04 20-03-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 20:03</td>
+      <td>R17_C1_S1_003</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_004_2026-09-04 22-07-54 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 22:07</td>
+      <td>R17_C1_S1_004</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_005_2026-09-05 00-11-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 00:11</td>
+      <td>R17_C1_S1_005</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_006_2026-09-05 02-15-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 02:15</td>
+      <td>R17_C1_S1_006</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_007_2026-09-05 04-19-57 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 04:19</td>
+      <td>R17_C1_S1_007</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_008_2026-09-05 06-23-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 06:23</td>
+      <td>R17_C1_S1_008</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_009_2026-09-05 08-28-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 08:28</td>
+      <td>R17_C1_S1_009</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_010_2026-09-05 10-32-03 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 10:32</td>
+      <td>R17_C1_S1_010</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_011_2026-09-05 12-35-59 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 12:35</td>
+      <td>R17_C1_S1_011</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_012_2026-09-05 14-40-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 14:40</td>
+      <td>R17_C1_S1_012</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_013_2026-09-05 16-44-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 16:44</td>
+      <td>R17_C1_S1_013</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_014_2026-09-05 18-48-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 18:48</td>
+      <td>R17_C1_S1_014</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_015_2026-09-05 20-52-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 20:52</td>
+      <td>R17_C1_S1_015</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_016_2026-09-05 22-56-09 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 22:56</td>
+      <td>R17_C1_S1_016</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_017_2026-09-06 01-00-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 01:00</td>
+      <td>R17_C1_S1_017</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_018_2026-09-06 03-04-13 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 03:04</td>
+      <td>R17_C1_S1_018</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_019_2026-09-06 05-08-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 05:08</td>
+      <td>R17_C1_S1_019</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_020_2026-09-06 07-12-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 07:12</td>
+      <td>R17_C1_S1_020</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_021_2026-09-06 09-16-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 09:16</td>
+      <td>R17_C1_S1_021</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_022_2026-09-06 11-20-16 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 11:20</td>
+      <td>R17_C1_S1_022</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_023_2026-09-06 13-24-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 13:24</td>
+      <td>R17_C1_S1_023</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_024_2026-09-06 15-28-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 15:28</td>
+      <td>R17_C1_S1_024</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_025_2026-09-06 17-32-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 17:32</td>
+      <td>R17_C1_S1_025</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_026_2026-09-06 19-36-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 19:36</td>
+      <td>R17_C1_S1_026</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_027_2026-09-06 21-40-26 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 21:40</td>
+      <td>R17_C1_S1_027</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_028_2026-09-06 23-44-27 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 23:44</td>
+      <td>R17_C1_S1_028</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_029_2026-09-07 01-48-28 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 01:48</td>
+      <td>R17_C1_S1_029</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_030_2026-09-07 03-52-30 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 03:52</td>
+      <td>R17_C1_S1_030</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_031_2026-09-07 05-56-31 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 05:56</td>
+      <td>R17_C1_S1_031</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+
+
+                <div
+                    id="Metadata"
+                    class="table-container"
+                >
+                    <table class="dataframe data-table" id="metadata_table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>File Name</th>
+      <th>DateTime</th>
+      <th>UID</th>
+      <th>HEADER B6</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>R17_C1_S1_001_2026-09-04 14-48-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 14:48</td>
+      <td>R17_C1_S1_001</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_001_2026-09-04 14-48-12 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_002_2026-09-04 17-59-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 17:59</td>
+      <td>R17_C1_S1_002</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_002_2026-09-04 17-59-51 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_003_2026-09-04 20-03-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 20:03</td>
+      <td>R17_C1_S1_003</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_003_2026-09-04 20-03-51 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_004_2026-09-04 22-07-54 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>04/09/2026 22:07</td>
+      <td>R17_C1_S1_004</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_004_2026-09-04 22-07-54 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_005_2026-09-05 00-11-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 00:11</td>
+      <td>R17_C1_S1_005</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_005_2026-09-05 00-11-55 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_006_2026-09-05 02-15-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 02:15</td>
+      <td>R17_C1_S1_006</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_006_2026-09-05 02-15-51 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_007_2026-09-05 04-19-57 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 04:19</td>
+      <td>R17_C1_S1_007</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_007_2026-09-05 04-19-57 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_008_2026-09-05 06-23-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 06:23</td>
+      <td>R17_C1_S1_008</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_008_2026-09-05 06-23-55 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_009_2026-09-05 08-28-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 08:28</td>
+      <td>R17_C1_S1_009</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_009_2026-09-05 08-28-01 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_010_2026-09-05 10-32-03 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 10:32</td>
+      <td>R17_C1_S1_010</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_010_2026-09-05 10-32-03 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_011_2026-09-05 12-35-59 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 12:35</td>
+      <td>R17_C1_S1_011</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_011_2026-09-05 12-35-59 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_012_2026-09-05 14-40-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 14:40</td>
+      <td>R17_C1_S1_012</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_012_2026-09-05 14-40-01 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_013_2026-09-05 16-44-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 16:44</td>
+      <td>R17_C1_S1_013</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_013_2026-09-05 16-44-01 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_014_2026-09-05 18-48-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 18:48</td>
+      <td>R17_C1_S1_014</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_014_2026-09-05 18-48-07 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_015_2026-09-05 20-52-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 20:52</td>
+      <td>R17_C1_S1_015</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_015_2026-09-05 20-52-14 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_016_2026-09-05 22-56-09 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>05/09/2026 22:56</td>
+      <td>R17_C1_S1_016</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_016_2026-09-05 22-56-09 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_017_2026-09-06 01-00-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 01:00</td>
+      <td>R17_C1_S1_017</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_017_2026-09-06 01-00-07 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_018_2026-09-06 03-04-13 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 03:04</td>
+      <td>R17_C1_S1_018</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_018_2026-09-06 03-04-13 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_019_2026-09-06 05-08-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 05:08</td>
+      <td>R17_C1_S1_019</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_019_2026-09-06 05-08-14 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_020_2026-09-06 07-12-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 07:12</td>
+      <td>R17_C1_S1_020</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_020_2026-09-06 07-12-12 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_021_2026-09-06 09-16-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 09:16</td>
+      <td>R17_C1_S1_021</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_021_2026-09-06 09-16-14 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_022_2026-09-06 11-20-16 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 11:20</td>
+      <td>R17_C1_S1_022</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_022_2026-09-06 11-20-16 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_023_2026-09-06 13-24-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 13:24</td>
+      <td>R17_C1_S1_023</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_023_2026-09-06 13-24-20 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_024_2026-09-06 15-28-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 15:28</td>
+      <td>R17_C1_S1_024</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_024_2026-09-06 15-28-22 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_025_2026-09-06 17-32-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 17:32</td>
+      <td>R17_C1_S1_025</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_025_2026-09-06 17-32-22 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_026_2026-09-06 19-36-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 19:36</td>
+      <td>R17_C1_S1_026</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_026_2026-09-06 19-36-20 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_027_2026-09-06 21-40-26 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 21:40</td>
+      <td>R17_C1_S1_027</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_027_2026-09-06 21-40-26 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_028_2026-09-06 23-44-27 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>06/09/2026 23:44</td>
+      <td>R17_C1_S1_028</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_028_2026-09-06 23-44-27 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_029_2026-09-07 01-48-28 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 01:48</td>
+      <td>R17_C1_S1_029</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_029_2026-09-07 01-48-28 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_030_2026-09-07 03-52-30 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 03:52</td>
+      <td>R17_C1_S1_030</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_030_2026-09-07 03-52-30 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_031_2026-09-07 05-56-31 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>07/09/2026 05:56</td>
+      <td>R17_C1_S1_031</td>
+      <td>C:\Users\Ramesha.Ganganahalli\Downloads\R17_C1_S1_031_2026-09-07 05-56-31 (GMT +05-30)dat-Back Signal.cdf</td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+
+
+                <div
+                    id="Processing-Log"
+                    class="table-container"
+                >
+                    <table class="dataframe data-table" id="processing_log_table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>File Name</th>
+      <th>Status</th>
+      <th>UID</th>
+      <th>Message</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>R17_C1_S1_001_2026-09-04 14-48-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_001</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_002_2026-09-04 17-59-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_002</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_003_2026-09-04 20-03-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_003</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_004_2026-09-04 22-07-54 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_004</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_005_2026-09-05 00-11-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_005</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_006_2026-09-05 02-15-51 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_006</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_007_2026-09-05 04-19-57 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_007</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_008_2026-09-05 06-23-55 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_008</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_009_2026-09-05 08-28-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_009</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_010_2026-09-05 10-32-03 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_010</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_011_2026-09-05 12-35-59 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_011</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_012_2026-09-05 14-40-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_012</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_013_2026-09-05 16-44-01 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_013</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_014_2026-09-05 18-48-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_014</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_015_2026-09-05 20-52-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_015</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_016_2026-09-05 22-56-09 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_016</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_017_2026-09-06 01-00-07 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_017</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_018_2026-09-06 03-04-13 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_018</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_019_2026-09-06 05-08-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_019</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_020_2026-09-06 07-12-12 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_020</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_021_2026-09-06 09-16-14 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_021</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_022_2026-09-06 11-20-16 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_022</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_023_2026-09-06 13-24-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_023</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_024_2026-09-06 15-28-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_024</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_025_2026-09-06 17-32-22 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_025</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_026_2026-09-06 19-36-20 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_027_2026-09-06 21-40-26 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_027</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_028_2026-09-06 23-44-27 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_028</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_029_2026-09-07 01-48-28 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_029</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_030_2026-09-07 03-52-30 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_030</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R17_C1_S1_031_2026-09-07 05-56-31 (GMT +05-30)dat-Back Signal.XLS</td>
+      <td>Success</td>
+      <td>R17_C1_S1_031</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+                </div>
+
+
+                <div
+                    id="noResultsMessage"
+                    class="message"
+                >
+                    No matching records were found.
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="footer">
+
+            Source folder:
+            C:\Users\Sankar.Sasmal\OneDrive - Shell\Desktop\PuthonDashboard\DHA
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        const componentSelector =
+            document.getElementById("componentSelector");
+
+        const searchBox =
+            document.getElementById("searchBox");
+
+        const clearSearchButton =
+            document.getElementById("clearSearchButton");
+
+        const activeTableTitle =
+            document.getElementById("activeTableTitle");
+
+        const tableCounter =
+            document.getElementById("tableCounter");
+
+        const noResultsMessage =
+            document.getElementById("noResultsMessage");
+
+
+        function getActiveContainer() {
+
+            return document.querySelector(
+                ".table-container.active"
+            );
+        }
+
+
+        function updateCounter() {
+
+            const activeContainer = getActiveContainer();
+
+            if (!activeContainer) {
+                tableCounter.textContent = "";
+                return;
+            }
+
+            const rows = activeContainer.querySelectorAll(
+                "tbody tr"
+            );
+
+            let visibleRows = 0;
+
+            rows.forEach(function(row) {
+
+                if (!row.classList.contains("hidden-row")) {
+                    visibleRows += 1;
+                }
+
+            });
+
+            tableCounter.textContent =
+                visibleRows + " of " + rows.length + " records";
+
+            if (rows.length > 0 && visibleRows === 0) {
+                noResultsMessage.classList.add("visible");
+            }
+            else {
+                noResultsMessage.classList.remove("visible");
+            }
+        }
+
+
+        function filterActiveTable() {
+
+            const filterText =
+                searchBox.value.trim().toLowerCase();
+
+            const activeContainer = getActiveContainer();
+
+            if (!activeContainer) {
+                return;
+            }
+
+            const rows = activeContainer.querySelectorAll(
+                "tbody tr"
+            );
+
+            rows.forEach(function(row) {
+
+                const rowText =
+                    row.textContent.toLowerCase();
+
+                if (
+                    filterText === "" ||
+                    rowText.includes(filterText)
+                ) {
+                    row.classList.remove("hidden-row");
+                }
+                else {
+                    row.classList.add("hidden-row");
+                }
+
+            });
+
+            updateCounter();
+        }
+
+
+        componentSelector.addEventListener(
+            "change",
+            function() {
+
+                document
+                    .querySelectorAll(".table-container")
+                    .forEach(function(container) {
+
+                        container.classList.remove("active");
+
+                        container
+                            .querySelectorAll("tbody tr")
+                            .forEach(function(row) {
+                                row.classList.remove("hidden-row");
+                            });
+
+                    });
+
+                const selectedContainer =
+                    document.getElementById(this.value);
+
+                if (selectedContainer) {
+                    selectedContainer.classList.add("active");
+                }
+
+                activeTableTitle.textContent =
+                    this.options[this.selectedIndex].text;
+
+                searchBox.value = "";
+
+                noResultsMessage.classList.remove("visible");
+
+                updateCounter();
+
+            }
+        );
+
+
+        searchBox.addEventListener(
+            "input",
+            filterActiveTable
+        );
+
+
+        clearSearchButton.addEventListener(
+            "click",
+            function() {
+
+                searchBox.value = "";
+
+                filterActiveTable();
+
+                searchBox.focus();
+
+            }
+        );
+
+
+        updateCounter();
+
+    </script>
+
+</body>
+
+</html>
