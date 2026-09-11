@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>DHA Data Dashboard</title>
+    <link rel="stylesheet" href="/frontend/css/dashboard.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">D</div>
+                <div>
+                    <h1>DHA Analytics</h1><small>Carbon distribution</small>
+                </div>
+            </div><button class="nav-item active">DHA Data</button>
+            <div class="sidebar-footer">Local analytical dashboard</div>
+        </aside>
+        <main>
+            <header>
+                <div><span class="eyebrow">DETAILED HYDROCARBON ANALYSIS</span>
+                    <h2>DHA Data</h2>
+                </div><span class="pill" id="status">Ready</span>
+            </header>
+            <section class="content">
+                <div class="hero">
+                    <div><span class="eyebrow">SOURCE FOLDER</span>
+                        <h1>Process and review DHA data.</h1>
+                        <p>Select the folder containing legacy XLS files, process it locally, and review aligned C1-C15
+                            values.</p>
+                    </div>
+                </div>
+                <div class="card folder-row"><input id="folder" class="input"><button id="browse"
+                        class="btn secondary">Browse</button><button id="process" class="btn primary">Process
+                        files</button></div>
+                <div id="error" class="error"></div>
+                <div class="kpis" id="kpis"></div>
+                <div class="card">
+                    <div class="card-head">
+                        <div><span class="eyebrow">DHA DATA</span>
+                            <h3>Carbon-number table</h3>
+                        </div>
+                        <div class="table-actions">
+                            <div class="component-filter" id="componentFilter"><button id="filterButton"
+                                    class="btn secondary filter-button" type="button" aria-haspopup="true"
+                                    aria-expanded="false">Components: All <span aria-hidden="true">▾</span></button>
+                                <div id="filterMenu" class="filter-menu" role="menu"><label><input type="checkbox"
+                                            value="Paraffin" checked> Paraffin</label><label><input type="checkbox"
+                                            value="I-Paraffins" checked> I-Paraffins</label><label><input
+                                            type="checkbox" value="Aromatics" checked> Aromatics</label><label><input
+                                            type="checkbox" value="Naphthenes" checked> Naphthenes</label><label><input
+                                            type="checkbox" value="Olefins" checked> Olefins</label>
+                                    <div class="filter-menu-actions"><button id="selectAllComponents"
+                                            class="filter-link" type="button">Select all</button><button
+                                            id="clearComponents" class="filter-link" type="button">Clear</button></div>
+                                </div>
+                            </div><input id="search" class="input search"
+                                placeholder="Search file, UID, date or component">
+                        </div>
+                    </div>
+                    <div class="filter-summary" id="filterSummary">Showing all components</div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead id="thead"></thead>
+                            <tbody id="tbody"></tbody>
+                        </table>
+                        <div id="empty" class="empty">Choose a folder and process the XLS files.</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="/frontend/js/dashboard.js"></script>
+</body>
+
+</html>
