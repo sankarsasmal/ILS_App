@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<script src="/frontend/js/navigation.js" defer></script>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width,initial-scale=1" name="viewport" />
+    <title>DHA Data Dashboard</title>
+    <link href="/frontend/css/dashboard.css" rel="stylesheet" />
+    <link href="/frontend/css/claude-theme.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="app-layout">
+        <main>
+            <header>
+                <div>
+                    <div class="eyebrow">DETAILED HYDROCARBON ANALYSIS</div>
+                    <h2>DHA Data</h2>
+                </div><span class="pill" id="status">Ready</span>
+            </header>
+            <section class="content">
+                <div class="error" id="error"></div>
+                <div class="hero">
+                    <div class="eyebrow"></div>
+                    <h1>Process and review DHA data.</h1>
+                    <p>One processing run builds all three analytical tables. Use Reactor Map to review valve-opening
+                        status.</p>
+                </div>
+                <div class="card folder-row" id="dataPanel"><input class="input" id="folder" /><button
+                        class="btn secondary" id="browse">Browse</button><button class="btn primary"
+                        id="process">Process files</button></div>
+                <div class="kpis" id="kpis"></div>
+                <div class="table-tabs" role="tablist"><button aria-controls="dataTablePanel" aria-selected="true"
+                        class="table-tab active" data-table="table1" role="tab">Table-1 · Carbon Numbers</button><button
+                        aria-controls="dataTablePanel" aria-selected="false" class="table-tab" data-table="table2"
+                        role="tab">Table-2 · Component List</button><button aria-controls="dataTablePanel"
+                        aria-selected="false" class="table-tab" data-table="table3" role="tab">Table-3 · Octane
+                        Table</button><button aria-controls="reactorMapPanel" aria-selected="false" class="table-tab"
+                        data-table="reactorMap" role="tab">Reactor Map</button></div>
+                <div class="reactor-map-panel" hidden="" id="reactorMapPanel">
+                    <div class="reactor-map-head">
+                        <div>
+                            <div class="eyebrow">DHA DATA · REACTOR OPERATIONS</div>
+                            <h3>Reactor Map</h3>
+                            <p>Valve-opening status for reactors R1 to R8. Use the date-time range to focus the
+                                operational window.</p>
+                        </div>
+                    </div>
+                    <div class="card reactor-source-row"><input class="input" id="reactorFolder" /><button
+                            class="btn secondary" id="reactorBrowse">Browse</button><button class="btn primary"
+                            id="reactorProcess">Process Reactor Map</button></div>
+                    <div class="card reactor-map-card">
+                        <div class="reactor-filters"><label>From<input id="valveFrom"
+                                    type="datetime-local"></label><label>To<input id="valveTo"
+                                    type="datetime-local"></label>
+                            <div class="reactor-legend"><span><i class="reactor-dot open"></i>Open (1)</span><span><i
+                                        class="reactor-dot closed"></i>Not open</span></div>
+                        </div>
+                        <div class="reactor-summary" id="reactorCount">Choose a Reactor Map source folder and process
+                            the CSV files.</div>
+                        <div class="reactor-table-wrap">
+                            <table class="reactor-table" id="reactorTable">
+                                <thead>
+                                    <tr id="reactorThead"></tr>
+                                </thead>
+                                <tbody id="reactorTbody"></tbody>
+                            </table>
+                            <div class="empty" id="reactorEmpty">Choose a Reactor Map source folder and process the CSV
+                                files.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" id="dataTablePanel">
+                    <div class="card-head">
+                        <div>
+                            <div class="eyebrow" id="tableEyebrow">DHA DATA · TABLE-1</div>
+                            <h3 id="tableTitle">Carbon-number table</h3>
+                        </div>
+                        <div class="table-actions">
+                            <div class="component-filter" id="componentFilter"><button
+                                    class="btn secondary filter-button" id="filterButton">Components: All
+                                    <span>▾</span></button>
+                                <div class="filter-menu" id="filterMenu"><label><input checked="" type="checkbox"
+                                            value="Paraffin" />Paraffin</label><label><input checked="" type="checkbox"
+                                            value="I-Paraffins" />I-Paraffins</label><label><input checked=""
+                                            type="checkbox" value="Aromatics" />Aromatics</label><label><input
+                                            checked="" type="checkbox"
+                                            value="Naphthenes" />Naphthenes</label><label><input checked=""
+                                            type="checkbox" value="Olefins" />Olefins</label><label><input checked=""
+                                            type="checkbox" value="Unknown" />Unknown</label>
+                                    <div class="filter-menu-actions"><button class="filter-link"
+                                            id="selectAllComponents">Select all</button><button class="filter-link"
+                                            id="clearComponents">Clear</button></div>
+                                </div>
+                            </div>
+                            <div class="reactor-filter-wrap" id="reactorFilterWrap"><select
+                                    aria-label="Filter by active reactor" class="input reactor-filter"
+                                    id="reactorFilter">
+                                    <option value="">Active Reactor: All</option>
+                                    <option value="R1">Active Reactor: R1</option>
+                                    <option value="R2">Active Reactor: R2</option>
+                                    <option value="R3">Active Reactor: R3</option>
+                                    <option value="R4">Active Reactor: R4</option>
+                                    <option value="R5">Active Reactor: R5</option>
+                                    <option value="R6">Active Reactor: R6</option>
+                                    <option value="R7">Active Reactor: R7</option>
+                                    <option value="R8">Active Reactor: R8</option>
+                                    <option value="__none__">Active Reactor: None</option>
+                                </select></div><input class="input search" id="search" placeholder="Search active table" />
+                        </div>
+                    </div>
+                    <div class="filter-summary" id="filterSummary">Showing Paraffin, I-Paraffins, Aromatics, Naphthenes,
+                        Olefins, Unknown</div>
+                    <div class="table-wrap">
+                        <table id="dataTable">
+                            <thead>
+                                <tr id="thead"></tr>
+                            </thead>
+                            <tbody id="tbody"></tbody>
+                        </table>
+                        <div class="empty" id="empty">Choose a folder and process the XLS files.</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="/frontend/js/dashboard.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>ILS GC and System Data | DHA Data Dashboard</title>
+    <link href="/frontend/css/dashboard.css" rel="stylesheet">
+    <link href="/frontend/css/claude-theme.css" rel="stylesheet">
+    <script src="/frontend/js/navigation.js" defer></script>
+    <script src="/frontend/js/online_analysis.js" defer></script>
+</head>
+
+<body>
+    <div class="app-layout">
+        <main>
+            <header>
+                <div>
+                    <div class="eyebrow">Gas Analysis</div>
+                    <h2>ILS GC and System Data</h2>
+                </div>
+                <span class="pill" id="onlineStatus">Ready</span>
+            </header>
+            <section class="content online-content">
+                <div class="hero">
+                    <div class="eyebrow">LIVE DATA WORKSPACE</div>
+                    <h1>Import and review online analysis.</h1>
+                    <p>Load a tab-delimited SystemTxt export to review reactor conditions and calculated gas values.</p>
+                </div>
+                <div class="error" id="onlineError"></div>
+                <div class="card online-source-row">
+                    <input class="input" id="onlineFile" placeholder="Enter path to SystemTxt .txt file" type="text">
+                    <button class="btn secondary" id="onlineBrowse" type="button">Browse</button>
+                    <button class="btn primary" id="onlineProcess" type="button">Import file</button>
+                </div>
+                <div class="online-summary" id="onlineSummary">Select a SystemTxt file to load Online Analysis data.
+                </div>
+                <div class="card online-table-card">
+                    <div class="card-head">
+                        <div>
+                            <div class="eyebrow">ONLINE DATA · SYSTEMTXT</div>
+                            <h3>Reactor conditions</h3>
+                        </div>
+                        <div class="table-actions online-table-actions">
+                            <button type="button" class="btn secondary reactor-toggle-btn" id="onlineReactorMapToggle" aria-pressed="false" title="Toggle Reactor Map hour - 1 mapping">
+                                <span class="reactor-dot closed" id="onlineToggleDot"></span>
+                                <span>Reactor Map:</span>
+                                <b id="onlineToggleText">OFF</b>
+                            </button>
+                            <select class="input online-filter" id="onlineReactorFilter" aria-label="Filter by reactor">
+                                <option value="">All reactors</option>
+                            </select>
+                            <input class="input search" id="onlineSearch" placeholder="Search table" type="search">
+                        </div>
+                    </div>
+                    <div class="reactor-filters online-datetime-filters">
+                        <label>From<input id="onlineFrom" type="datetime-local" step="1"></label>
+                        <label>To<input id="onlineTo" type="datetime-local" step="1"></label>
+                        <button type="button" class="btn secondary online-clear-dates-btn" id="onlineClearDates" title="Clear date range">Clear dates</button>
+                        <div class="online-filter-badge" id="onlineDateBadge"></div>
+                    </div>
+                    <div class="table-wrap online-table-wrap">
+                        <table class="online-table" id="onlineTable">
+                            <thead>
+                                <tr id="onlineThead"></tr>
+                            </thead>
+                            <tbody id="onlineTbody"></tbody>
+                        </table>
+                        <div class="empty" id="onlineEmpty">Import a SystemTxt file to load Online Analysis data.</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>
