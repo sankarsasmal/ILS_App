@@ -98,11 +98,12 @@ def test_navigation_and_subtabs_markup():
     assert "Run Plan" in nav_js
     assert "/frontend/run_plan.html" in nav_js
 
-    # Verify Run Plan is positioned beside Online Analysis
-    pos_online = nav_js.find("Online Analysis")
+    # Verify Run Plan is the 1st tab in navigation before Offline and Online
     pos_runplan = nav_js.find("Run Plan")
-    assert pos_online != -1 and pos_runplan != -1
-    assert pos_online < pos_runplan
+    pos_offline = nav_js.find("Offline Analysis")
+    pos_online = nav_js.find("Online Analysis")
+    assert pos_runplan != -1 and pos_offline != -1 and pos_online != -1
+    assert pos_runplan < pos_offline < pos_online
 
     run_plan_html = (BASE / "frontend/run_plan.html").read_text(encoding="utf-8")
     assert 'data-subtab="feed"' in run_plan_html
@@ -132,5 +133,206 @@ def test_run_plan_tables_column_alignment():
     assert '<td style="text-align: center;">${fmt(r.r1)}</td>' in js
     # DOE last col left-aligned, others centered
     assert "isLast ? 'left; padding-left: 16px;' : 'center'" in js
+
+
+def test_run_number_and_landing_page():
+    c = create_app({"TESTING": True}).test_client()
+
+    # 1. Verify landing page / serves Run Plan
+    landing_resp = c.get("/")
+    assert landing_resp.status_code == 200
+    assert b"Run Plan Management" in landing_resp.data
+    assert b"id=\"runNumberInput\"" in landing_resp.data
+
+    # Verify offline analysis route
+    offline_resp = c.get("/offline-analysis")
+    assert offline_resp.status_code == 200
+    assert b"DHA Data" in offline_resp.data
+
+    # 2. Verify HTML header elements across all pages
+    run_plan_html = (BASE / "frontend/run_plan.html").read_text(encoding="utf-8")
+    assert 'id="runNumberInput"' in run_plan_html
+    assert 'Run Number' in run_plan_html
+
+    index_html = (BASE / "frontend/index.html").read_text(encoding="utf-8")
+    assert 'id="runNumberDisplay"' in index_html
+    assert 'readonly' in index_html
+    assert 'disabled' in index_html
+
+    online_html = (BASE / "frontend/online_analysis.html").read_text(encoding="utf-8")
+    assert 'id="runNumberDisplay"' in online_html
+    assert 'readonly' in online_html
+    assert 'disabled' in online_html
+
+    # 3. Verify CSS rules
+    css = (BASE / "frontend/css/dashboard.css").read_text(encoding="utf-8")
+    assert ".run-number-group" in css
+    assert ".run-number-input" in css
+    assert ".run-number-readonly" in css
+
+    # 4. Verify API endpoints for Run Number
+    # GET run-number
+    get_resp = c.get("/api/run-number")
+    assert get_resp.status_code == 200
+    assert "run_number" in get_resp.json
+
+    # POST valid whole number
+    post_resp = c.post("/api/run-number", json={"run_number": "104"})
+    assert post_resp.status_code == 200
+    assert post_resp.json["run_number"] == "104"
+
+    # Verify settings returns run_number
+    settings_resp = c.get("/api/settings")
+    assert settings_resp.status_code == 200
+    assert settings_resp.json["run_number"] == "104"
+
+    # POST invalid values (decimal, negative, letters)
+    bad_decimal = c.post("/api/run-number", json={"run_number": "10.5"})
+    assert bad_decimal.status_code == 400
+
+    bad_negative = c.post("/api/run-number", json={"run_number": "-5"})
+    assert bad_negative.status_code == 400
+
+    bad_text = c.post("/api/run-number", json={"run_number": "abc"})
+    assert bad_text.status_code == 400
+
+    # POST empty value allows clearing
+    empty_resp = c.post("/api/run-number", json={"run_number": ""})
+    assert empty_resp.status_code == 200
+    assert empty_resp.json["run_number"] == ""
+
+
+def test_run_number_empty_condition_and_readiness_hourglass():
+    # 1. Verify "Please enter run number to start with" condition in JS files
+    rp_js = (BASE / "frontend/js/run_plan.js").read_text(encoding="utf-8")
+    assert "Please enter run number to start with" in rp_js
+    assert "$('#runPlanProcess')" in rp_js
+
+    dash_js = (BASE / "frontend/js/dashboard.js").read_text(encoding="utf-8")
+    assert "Please enter run number to start with" in dash_js
+    assert "$('#process')" in dash_js
+
+    online_js = (BASE / "frontend/js/online_analysis.js").read_text(encoding="utf-8")
+    assert "Please enter run number to start with" in online_js
+    assert "online$('#onlineProcess')" in online_js
+
+    # 2. Verify readiness indicator, ready-dot, and hourglass animation in HTML
+    for page in ["run_plan.html", "index.html", "online_analysis.html"]:
+        html = (BASE / "frontend" / page).read_text(encoding="utf-8")
+        assert "readiness-indicator" in html
+        assert "ready-dot" in html
+        assert "hourglass-svg" in html
+
+    # 3. Verify CSS: outside border removed from pill, green ready-dot and conditional toggle rules present
+    css = (BASE / "frontend/css/dashboard.css").read_text(encoding="utf-8")
+    assert ".pill{padding:7px 11px;border:none" in css
+    assert ".readiness-indicator" in css
+    assert "border:none!important" in css
+    assert ".ready-dot" in css
+    assert "background:#16a34a" in css
+    assert ".readiness-indicator .hourglass-svg{display:none}" in css
+    assert ".readiness-indicator.processing .hourglass-svg,.readiness-indicator.busy .hourglass-svg{display:inline-block}" in css
+    assert "@keyframes hourglass-flip" in css
+    assert "@keyframes sand-trickle" in css
+
+    # 4. Verify navigation.js observer logic and reset button behavior
+    nav_js = (BASE / "frontend/js/navigation.js").read_text(encoding="utf-8")
+    assert "readinessEl.classList.toggle('processing', isBusy)" in nav_js
+    assert "MutationObserver" in nav_js
+    assert "localStorage.removeItem(RUN_NUMBER_KEY)" in nav_js
+    assert "Reset dashboard and Run Number" in nav_js
+
+    # 5. Verify default settings start blank
+    settings = (BASE / "config/settings.json").read_text(encoding="utf-8")
+    assert '"run_number": ""' in settings
+
+
+def test_run_number_starts_blank_and_reset_behavior():
+    app = create_app()
+    assert app.config["RUN_NUMBER"] == ""
+    c = app.test_client()
+
+    # Initial GET must be blank
+    r = c.get("/api/run-number")
+    assert r.status_code == 200
+    assert r.json["run_number"] == ""
+
+    # POST new run number updates runtime but keeps disk settings.json blank
+    p = c.post("/api/run-number", json={"run_number": "5017"})
+    assert p.status_code == 200
+    assert p.json["run_number"] == "5017"
+    assert c.get("/api/run-number").json["run_number"] == "5017"
+
+    disk_settings = (BASE / "config/settings.json").read_text(encoding="utf-8")
+    assert '"run_number": ""' in disk_settings
+
+    # Verify reset endpoint clears it
+    reset_resp = c.post("/api/run-number", json={"run_number": ""})
+    assert reset_resp.status_code == 200
+    assert reset_resp.json["run_number"] == ""
+    assert c.get("/api/run-number").json["run_number"] == ""
+
+    # Verify frontend navigation.js logic for blank start and reset button
+    nav_js = (BASE / "frontend/js/navigation.js").read_text(encoding="utf-8")
+    assert "runInput.value = '';" in nav_js
+    assert "runInput.defaultValue = '';" in nav_js
+    assert "window.location.replace(window.location.pathname)" in nav_js
+    assert "sessionStorage.clear()" in nav_js
+    assert "body: JSON.stringify({ run_number: '' })" in nav_js
+
+    # Verify HTML attributes
+    rp_html = (BASE / "frontend/run_plan.html").read_text(encoding="utf-8")
+    assert 'id="runNumberInput"' in rp_html
+    assert 'value=""' in rp_html
+    assert 'autocomplete="off"' in rp_html
+
+
+def test_feed_properties_endpoint():
+    c = create_app({"TESTING": True}).test_client()
+    resp = c.get("/api/feed-properties")
+    assert resp.status_code == 200
+    data = resp.json
+    assert "rows" in data
+    assert len(data["rows"]) == 3
+    # Check 1st three rows: Carbon, Hydrogen, Molecular Weight
+    r0 = data["rows"][0]
+    r1 = data["rows"][1]
+    r2 = data["rows"][2]
+    assert r0["component"] == "Carbon"
+    assert round(float(r0["value"]), 2) == 83.61
+    assert r1["component"] == "Hydrogen"
+    assert round(float(r1["value"]), 2) == 16.23
+    assert r2["component"] == "Molecular Weight"
+    assert round(float(r2["value"]), 2) == 88.55
+
+
+def test_calculation_table_feed_properties_markup_and_script():
+    calc_html = (BASE / "frontend/calculation_table.html").read_text(encoding="utf-8")
+    assert 'id="calcFeedStrip"' in calc_html
+    assert 'id="calcFeedCarbonVal"' in calc_html
+    assert 'id="calcFeedHydrogenVal"' in calc_html
+    assert 'id="calcFeedMWVal"' in calc_html
+    # Verify calcFeedStrip is placed beside calcClearDates
+    clear_dates_pos = calc_html.find('id="calcClearDates"')
+    feed_strip_pos = calc_html.find('id="calcFeedStrip"')
+    badge_pos = calc_html.find('id="calcDateBadge"')
+    assert clear_dates_pos != -1 and feed_strip_pos != -1 and badge_pos != -1
+    assert clear_dates_pos < feed_strip_pos < badge_pos
+
+    calc_js = (BASE / "frontend/js/calculation_table.js").read_text(encoding="utf-8")
+    assert "renderFeedProperties" in calc_js
+    assert "loadFeedProperties" in calc_js
+    assert "toFixed(2)" in calc_js
+    assert "/api/feed-properties" in calc_js
+
+    css = (BASE / "frontend/css/dashboard.css").read_text(encoding="utf-8")
+    assert ".calc-feed-strip" in css
+    assert "inline-flex" in css
+
+
+
+
+
+
 
 

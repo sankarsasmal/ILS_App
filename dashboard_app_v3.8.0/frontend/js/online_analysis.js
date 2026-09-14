@@ -285,6 +285,11 @@ online$('#onlineBrowse').onclick = async () => {
 };
 
 online$('#onlineProcess').onclick = async () => {
+    const runNum = (sessionStorage.getItem('ils_run_number') || localStorage.getItem('ils_run_number') || '').trim();
+    if (!runNum) {
+        onlineError("Please enter run number to start with");
+        return;
+    }
     onlineError();
     online$('#onlineStatus').textContent = 'Importing...';
     online$('#onlineProcess').disabled = true;

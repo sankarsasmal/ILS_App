@@ -190,6 +190,9 @@ function saveState() {
             doeReactor: $('#doeReactorFilter')?.value || '',
         };
         sessionStorage.setItem('runPlanDashboardState', JSON.stringify(state));
+        if (Array.isArray(feedRows) && feedRows.length) {
+            sessionStorage.setItem('ils_feed_properties', JSON.stringify(feedRows));
+        }
     } catch (e) {}
 }
 
@@ -222,6 +225,17 @@ function restoreState() {
 }
 
 async function processFile(path) {
+    const runNum = (document.getElementById('runNumberInput')?.value || sessionStorage.getItem('ils_run_number') || localStorage.getItem('ils_run_number') || '').trim();
+    if (!runNum) {
+        showError("Please enter run number to start with");
+        const runInput = document.getElementById('runNumberInput');
+        if (runInput) {
+            runInput.focus();
+            runInput.classList.add('input-attention');
+            setTimeout(() => runInput.classList.remove('input-attention'), 1500);
+        }
+        return;
+    }
     if (!path) {
         showError('Please specify a Run Plan Excel file path.');
         return;
@@ -339,8 +353,9 @@ async function init() {
     // Initial render
     switchSubtab(activeSubtab);
 
-    // Auto-process if file path exists but no data is loaded yet
-    if (!hasRestored && $('#runPlanFile')?.value) {
+    // Auto-process if file path exists, data not restored, and Run Number is set
+    const initRunNum = (document.getElementById('runNumberInput')?.value || sessionStorage.getItem('ils_run_number') || localStorage.getItem('ils_run_number') || '').trim();
+    if (!hasRestored && $('#runPlanFile')?.value && initRunNum) {
         processFile($('#runPlanFile').value.trim());
     }
 }

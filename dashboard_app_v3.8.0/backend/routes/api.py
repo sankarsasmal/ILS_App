@@ -1,3 +1,5 @@
+import json
+import os
 from pathlib import Path
 
 from flask import Blueprint, current_app, jsonify, request
@@ -20,8 +22,46 @@ def settings():
             "default_source_directory": current_app.config.get("DEFAULT_SOURCE_DIRECTORY", ""),
             "default_reactor_source_directory": current_app.config.get("DEFAULT_REACTOR_SOURCE_DIRECTORY", ""),
             "default_run_plan_file": current_app.config.get("DEFAULT_RUN_PLAN_FILE", ""),
+            "run_number": current_app.config.get("RUN_NUMBER", ""),
         }
     )
+
+
+@api.get("/run-number")
+def get_run_number():
+    return jsonify({"run_number": current_app.config.get("RUN_NUMBER", "")})
+
+
+@api.post("/run-number")
+def set_run_number():
+    data = request.get_json(silent=True) or {}
+    if "run_number" not in data:
+        return jsonify({"error": "run_number field is required."}), 400
+
+    raw_val = data["run_number"]
+    if raw_val is None or raw_val == "":
+        cleaned_val = ""
+    else:
+        val_str = str(raw_val).strip()
+        if not val_str.isdigit():
+            return jsonify({"error": "Run Number must be a numeric whole number."}), 400
+        cleaned_val = str(int(val_str))
+
+    current_app.config["RUN_NUMBER"] = cleaned_val
+
+    # Keep settings.json on disk with run_number blank ("") so that
+    # the application always starts with a blank Run Number on every fresh launch.
+    base_dir = Path(__file__).resolve().parents[2]
+    settings_file = base_dir / "config" / "settings.json"
+    if settings_file.exists():
+        try:
+            s = json.loads(settings_file.read_text(encoding="utf-8"))
+            s["run_number"] = ""
+            settings_file.write_text(json.dumps(s, indent=2), encoding="utf-8")
+        except Exception as e:
+            current_app.logger.error(f"Failed to persist settings: {e}")
+
+    return jsonify({"status": "ok", "run_number": cleaned_val})
 
 
 
@@ -113,6 +153,7 @@ def process_online():
     if not file_path:
         return jsonify({"error": "Online Analysis file path is required."}), 400
     try:
+        current_app.config["ACTIVE_ONLINE_FILE"] = file_path
         return jsonify(process_online_file(file_path))
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -161,8 +202,84 @@ def process_run_plan():
         return jsonify({"error": "Run Plan file path is required."}), 400
     try:
         from backend.services.run_plan_service import process_run_plan_file
+        current_app.config["ACTIVE_RUN_PLAN_FILE"] = file_path
         return jsonify(process_run_plan_file(file_path))
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+
+@api.get("/feed-properties")
+def feed_properties():
+    run_plan_file = current_app.config.get("ACTIVE_RUN_PLAN_FILE") or current_app.config.get("DEFAULT_RUN_PLAN_FILE")
+    if not run_plan_file:
+        from RunPlan import DEFAULT_RUN_PLAN_PATH
+        run_plan_file = DEFAULT_RUN_PLAN_PATH
+
+    path = Path(run_plan_file) if run_plan_file else None
+    if not path or not path.exists():
+        fallback = Path(r"C:\Users\sanka\Desktop\Python_Playground\RunPlan.xlsx")
+        if fallback.exists():
+            path = fallback
+
+    if not path or not path.exists():
+        return jsonify({"properties": [], "rows": [], "error": "Run Plan file not found."}), 404
+
+    try:
+        from backend.services.run_plan_service import process_run_plan_file
+        res = process_run_plan_file(str(path))
+        feed_rows = res.get("feed", {}).get("rows", [])
+        return jsonify({
+            "source_file": str(path),
+            "rows": feed_rows[:3],
+            "all_rows": feed_rows,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e), "rows": []}), 400
+
+
+@api.post("/process-calculation-base")
+def process_calculation_base():
+    body = request.get_json(silent=True) or {}
+    file_path = body.get("path")
+    rows = body.get("rows")
+    columns = body.get("columns")
+    carbon = body.get("carbon")
+    molecular_weight = body.get("molecular_weight")
+
+    try:
+        from backend.services.calculation_table_service import (
+            process_base_table_file,
+            extract_base_table_data,
+        )
+
+        if not file_path and rows is None:
+            active_file = current_app.config.get("ACTIVE_ONLINE_FILE")
+            if active_file and os.path.exists(active_file):
+                file_path = active_file
+
+        if file_path:
+            return jsonify(process_base_table_file(file_path, carbon=carbon, molecular_weight=molecular_weight))
+        elif rows is not None:
+            return jsonify(
+                extract_base_table_data(
+                    {
+                        "rows": rows,
+                        "columns": columns or [],
+                        "source_file": body.get("source_file", ""),
+                    },
+                    carbon=carbon,
+                    molecular_weight=molecular_weight,
+                )
+            )
+        else:
+            return jsonify({
+                "error": "No Online Analysis data is currently loaded. Please load or import a SystemTxt file on the Online Analysis page first.",
+                "rows": [],
+                "columns": [],
+                "record_count": 0
+            }), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 
 

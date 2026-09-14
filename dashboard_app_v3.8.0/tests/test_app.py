@@ -5,8 +5,12 @@ from backend.services.online_analysis_service import ONLINE_COLUMNS, process_onl
 def test_endpoints():
     c = create_app({"TESTING": True}).test_client()
     assert c.get("/").status_code == 200
+    assert c.get("/run-plan").status_code == 200
+    assert c.get("/offline-analysis").status_code == 200
     assert c.get("/frontend/reactor_map.html").status_code == 200
     assert c.get("/frontend/online_analysis.html").status_code == 200
+    assert c.get("/calculation-table").status_code == 200
+    assert c.get("/frontend/calculation_table.html").status_code == 200
     assert c.get("/api/health").json["version"] == "3.4.0"
 
 
