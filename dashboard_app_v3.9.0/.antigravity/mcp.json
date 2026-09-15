@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "memories": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@memories.sh/cli",
+        "serve"
+      ]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "version": "1.1.0",
+  "backup_created": "2026-09-08",
+  "files_replaced": [
+    "frontend/index.html",
+    "frontend/css/dashboard.css",
+    "frontend/js/dashboard.js",
+    "VERSION",
+    "CHANGELOG.md",
+    "documentation/Dashboard_Technical_Documentation.docx"
+  ],
+  "note": "The generated patch contains replacement files. Keep the existing local dashboard_app folder as the authoritative full rollback backup."
+}
