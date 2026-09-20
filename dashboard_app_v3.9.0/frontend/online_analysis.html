@@ -8,7 +8,7 @@
     <link href="/frontend/css/dashboard.css" rel="stylesheet">
     <link href="/frontend/css/claude-theme.css" rel="stylesheet">
     <script src="/frontend/js/navigation.js" defer></script>
-    <script src="/frontend/js/online_analysis.js" defer></script>
+    <script src="/frontend/js/online_analysis.js?v=3" defer></script>
 </head>
 
 <body>
@@ -66,6 +66,7 @@
                             <select class="input online-filter" id="onlineReactorFilter" aria-label="Filter by reactor">
                                 <option value="">All reactors</option>
                             </select>
+                            <button type="button" class="btn secondary online-restore-columns" id="onlineRestoreColumns" hidden>Restore columns</button>
                             <input class="input search" id="onlineSearch" placeholder="Search table" type="search">
                         </div>
                     </div>

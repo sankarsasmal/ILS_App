@@ -3,14 +3,50 @@ import pytest
 from backend.services.online_analysis_service import (
     map_online_row_reactor,
     apply_reactor_map_to_online_rows,
+    process_online_file,
 )
 from app import create_app
 
 
+def test_process_online_file_preserves_dynamic_columns(tmp_path):
+    source = tmp_path / "online.txt"
+    source.write_text(
+        "Date/Time\tSampled_reactor\tUnexpected_GC_Field\tConc_H2\tRT_H2\tName_H2\tArea_H2\n"
+        "04.09.2026 16:20:46\tR2\t12.5\t22.6\t1.61\tH2\t3587367\n",
+        encoding="utf-8",
+    )
+
+    result = process_online_file(source)
+
+    assert result["columns"] == ["DateTime", "Reactor", "Unexpected_GC_Field"]
+    assert result["rows"][0]["Unexpected_GC_Field"] == 12.5
+    assert not {"Conc_H2", "RT_H2", "Name_H2", "Area_H2"} & result["rows"][0].keys()
+
+
 def test_map_online_row_reactor_basic():
     reactor_rows = [
-        {"DateTime": "2026-09-04 15:00:00", "R1": 1, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0},
-        {"DateTime": "2026-09-04 16:00:00", "R1": 0, "R2": 1, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0},
+        {
+            "DateTime": "2026-09-04 15:00:00",
+            "R1": 1,
+            "R2": 0,
+            "R3": 0,
+            "R4": 0,
+            "R5": 0,
+            "R6": 0,
+            "R7": 0,
+            "R8": 0,
+        },
+        {
+            "DateTime": "2026-09-04 16:00:00",
+            "R1": 0,
+            "R2": 1,
+            "R3": 0,
+            "R4": 0,
+            "R5": 0,
+            "R6": 0,
+            "R7": 0,
+            "R8": 0,
+        },
     ]
     # Row at 16:20:46 should subtract 1 hour -> 15:20:46 -> hour 15 -> R1
     result = map_online_row_reactor("2026-09-04 16:20:46", reactor_rows)
@@ -20,8 +56,28 @@ def test_map_online_row_reactor_basic():
 def test_map_online_row_reactor_midnight_rollover():
     # Midnight: 00:36:00 minus 1 hour -> previous day (2026-09-04) hour 23
     reactor_rows = [
-        {"DateTime": "2026-09-04 23:00:00", "R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 1, "R6": 0, "R7": 0, "R8": 0},
-        {"DateTime": "2026-09-05 00:00:00", "R1": 0, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 1, "R7": 0, "R8": 0},
+        {
+            "DateTime": "2026-09-04 23:00:00",
+            "R1": 0,
+            "R2": 0,
+            "R3": 0,
+            "R4": 0,
+            "R5": 1,
+            "R6": 0,
+            "R7": 0,
+            "R8": 0,
+        },
+        {
+            "DateTime": "2026-09-05 00:00:00",
+            "R1": 0,
+            "R2": 0,
+            "R3": 0,
+            "R4": 0,
+            "R5": 0,
+            "R6": 1,
+            "R7": 0,
+            "R8": 0,
+        },
     ]
     result = map_online_row_reactor("2026-09-05 00:36:00", reactor_rows)
     assert result == "R5"
@@ -30,8 +86,28 @@ def test_map_online_row_reactor_midnight_rollover():
 def test_map_online_row_reactor_date_priority_over_hour_fallback():
     # If date matches, it should choose the row on the matching date
     reactor_rows = [
-        {"DateTime": "2026-09-03 14:00:00", "R1": 1, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0},
-        {"DateTime": "2026-09-04 14:00:00", "R1": 0, "R2": 1, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0},
+        {
+            "DateTime": "2026-09-03 14:00:00",
+            "R1": 1,
+            "R2": 0,
+            "R3": 0,
+            "R4": 0,
+            "R5": 0,
+            "R6": 0,
+            "R7": 0,
+            "R8": 0,
+        },
+        {
+            "DateTime": "2026-09-04 14:00:00",
+            "R1": 0,
+            "R2": 1,
+            "R3": 0,
+            "R4": 0,
+            "R5": 0,
+            "R6": 0,
+            "R7": 0,
+            "R8": 0,
+        },
     ]
     # 2026-09-04 15:10 - 1 hr -> 2026-09-04 14:10 -> should pick R2
     result = map_online_row_reactor("2026-09-04 15:10:00", reactor_rows)
@@ -41,7 +117,17 @@ def test_map_online_row_reactor_date_priority_over_hour_fallback():
 def test_map_online_row_reactor_hour_fallback_when_date_mismatch():
     # If date is not found in reactor map, falls back to matching hour
     reactor_rows = [
-        {"DateTime": "2026-09-01 10:00:00", "R1": 0, "R2": 0, "R3": 1, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0},
+        {
+            "DateTime": "2026-09-01 10:00:00",
+            "R1": 0,
+            "R2": 0,
+            "R3": 1,
+            "R4": 0,
+            "R5": 0,
+            "R6": 0,
+            "R7": 0,
+            "R8": 0,
+        },
     ]
     # 2026-09-05 11:30 - 1 hr -> hour 10 -> should fallback to R3
     result = map_online_row_reactor("2026-09-05 11:30:00", reactor_rows)
@@ -50,7 +136,12 @@ def test_map_online_row_reactor_hour_fallback_when_date_mismatch():
 
 def test_map_online_row_reactor_invalid_inputs():
     assert map_online_row_reactor(None, []) is None
-    assert map_online_row_reactor("invalid-date", [{"DateTime": "2026-09-04 10:00:00", "R1": 1}]) is None
+    assert (
+        map_online_row_reactor(
+            "invalid-date", [{"DateTime": "2026-09-04 10:00:00", "R1": 1}]
+        )
+        is None
+    )
     assert map_online_row_reactor("2026-09-04 10:00:00", []) is None
     assert map_online_row_reactor("2026-09-04 10:00:00", None) is None
 
@@ -62,8 +153,28 @@ def test_apply_reactor_map_to_online_rows():
         {"DateTime": "invalid", "Reactor": "KeepMe", "C1": 3.6},
     ]
     reactor_rows = [
-        {"DateTime": "2026-09-04 15:00:00", "R1": 1, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0},
-        {"DateTime": "2026-09-04 17:00:00", "R1": 0, "R2": 1, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0},
+        {
+            "DateTime": "2026-09-04 15:00:00",
+            "R1": 1,
+            "R2": 0,
+            "R3": 0,
+            "R4": 0,
+            "R5": 0,
+            "R6": 0,
+            "R7": 0,
+            "R8": 0,
+        },
+        {
+            "DateTime": "2026-09-04 17:00:00",
+            "R1": 0,
+            "R2": 1,
+            "R3": 0,
+            "R4": 0,
+            "R5": 0,
+            "R6": 0,
+            "R7": 0,
+            "R8": 0,
+        },
     ]
 
     mapped = apply_reactor_map_to_online_rows(online_rows, reactor_rows)
@@ -87,8 +198,18 @@ def test_api_apply_online_reactor_map():
     payload = {
         "rows": [{"DateTime": "2026-09-04 16:20:46", "Reactor": "None"}],
         "reactor_rows": [
-            {"DateTime": "2026-09-04 15:00:00", "R1": 1, "R2": 0, "R3": 0, "R4": 0, "R5": 0, "R6": 0, "R7": 0, "R8": 0}
-        ]
+            {
+                "DateTime": "2026-09-04 15:00:00",
+                "R1": 1,
+                "R2": 0,
+                "R3": 0,
+                "R4": 0,
+                "R5": 0,
+                "R6": 0,
+                "R7": 0,
+                "R8": 0,
+            }
+        ],
     }
     res = client.post("/api/apply-online-reactor-map", json=payload)
     assert res.status_code == 200
@@ -102,19 +223,23 @@ def test_api_apply_online_reactor_map():
     assert bad_res1.status_code == 400
 
     # Missing reactor_rows error handling
-    bad_res2 = client.post("/api/apply-online-reactor-map", json={"rows": [{"DateTime": "2026-09-04 10:00:00"}]})
+    bad_res2 = client.post(
+        "/api/apply-online-reactor-map",
+        json={"rows": [{"DateTime": "2026-09-04 10:00:00"}]},
+    )
     assert bad_res2.status_code == 400
 
 
 def test_frontend_online_reactor_map_toggle_elements():
     from pathlib import Path
+
     base = Path(__file__).resolve().parent.parent
 
     html = (base / "frontend/online_analysis.html").read_text(encoding="utf-8")
     assert 'id="onlineReactorMapToggle"' in html
     assert 'id="onlineToggleDot"' in html
     assert 'id="onlineToggleText"' in html
-    assert 'Reactor Map:' in html
+    assert "Reactor Map:" in html
 
     js = (base / "frontend/js/online_analysis.js").read_text(encoding="utf-8")
     assert "computeReactorForDateTime" in js
@@ -124,3 +249,19 @@ def test_frontend_online_reactor_map_toggle_elements():
 
     css = (base / "frontend/css/dashboard.css").read_text(encoding="utf-8")
     assert ".reactor-toggle-btn" in css
+
+
+def test_frontend_online_table_has_removable_dynamic_columns():
+    from pathlib import Path
+
+    base = Path(__file__).resolve().parent.parent
+
+    html = (base / "frontend/online_analysis.html").read_text(encoding="utf-8")
+    js = (base / "frontend/js/online_analysis.js").read_text(encoding="utf-8")
+
+    assert 'id="onlineRestoreColumns"' in html
+    assert "column !== 'DateTime'" in js
+    assert "online-remove-column" in js
+    assert "onlineState.allColumns" in js
+    assert "ONLINE_STATE_SCHEMA_VERSION" in js
+    assert "shouldRefreshOnlineSchema" in js

@@ -1,7 +1,9 @@
+const ONLINE_STATE_SCHEMA_VERSION = 3;
 const onlineState = {
     rows: [],
     rawRows: [],
     columns: [],
+    allColumns: [],
     reactorMapActive: false,
     reactorRows: []
 };
@@ -158,9 +160,11 @@ function saveOnlineState() {
     const from = online$('#onlineFrom')?.value || '';
     const to = online$('#onlineTo')?.value || '';
     const state = JSON.stringify({
+            schemaVersion: ONLINE_STATE_SCHEMA_VERSION,
             rows: onlineState.rows,
             rawRows: onlineState.rawRows,
             columns: onlineState.columns,
+            allColumns: onlineState.allColumns,
             reactorMapActive: onlineState.reactorMapActive,
             path: online$('#onlineFile').value,
             summary: online$('#onlineSummary').textContent,
@@ -173,9 +177,11 @@ function saveOnlineState() {
 }
 
 function restoreOnlineState() {
+    let shouldRefreshSchema = false;
     try {
         const saved = JSON.parse(sessionStorage.getItem('dhaOnlineState') || localStorage.getItem('dhaOnlineState') || 'null');
         if (saved) {
+            shouldRefreshSchema = saved.schemaVersion !== ONLINE_STATE_SCHEMA_VERSION && Boolean(saved.path);
             if (Array.isArray(saved.rawRows)) {
                 onlineState.rawRows = saved.rawRows;
             } else if (Array.isArray(saved.rows)) {
@@ -184,6 +190,7 @@ function restoreOnlineState() {
             onlineState.reactorMapActive = Boolean(saved.reactorMapActive);
             if (Array.isArray(saved.rows)) onlineState.rows = saved.rows;
             if (Array.isArray(saved.columns)) onlineState.columns = saved.columns;
+            onlineState.allColumns = Array.isArray(saved.allColumns) ? saved.allColumns : [...onlineState.columns];
             if (saved.path) online$('#onlineFile').value = saved.path;
             if (saved.summary) online$('#onlineSummary').textContent = saved.summary;
             if (saved.from && online$('#onlineFrom')) online$('#onlineFrom').value = saved.from;
@@ -197,6 +204,7 @@ function restoreOnlineState() {
     } catch (error) {
         sessionStorage.removeItem('dhaOnlineState');
     }
+    return shouldRefreshSchema;
 }
 
 function onlineError(message = '') {
@@ -239,9 +247,33 @@ function renderOnlineTable() {
         return Object.values(row).join(' ').toLowerCase().includes(query);
     });
 
-    online$('#onlineThead').innerHTML = onlineState.columns.map((column) => `<th>${column}</th>`).join('');
+    const header = online$('#onlineThead');
+    header.replaceChildren(...onlineState.columns.map((column) => {
+        const cell = document.createElement('th');
+        const label = document.createElement('span');
+        label.textContent = column;
+        cell.appendChild(label);
+        if (column !== 'DateTime') {
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'online-remove-column';
+            removeButton.textContent = '×';
+            removeButton.title = `Remove ${column} column`;
+            removeButton.setAttribute('aria-label', `Remove ${column} column`);
+            removeButton.onclick = () => {
+                onlineState.columns = onlineState.columns.filter((visibleColumn) => visibleColumn !== column);
+                saveOnlineState();
+                renderOnlineTable();
+            };
+            cell.appendChild(removeButton);
+        }
+        return cell;
+    }));
     online$('#onlineTbody').innerHTML = rows.map((row) => `<tr>${onlineState.columns.map((column) => `<td>${column === 'Reactor' ? String(row[column] ?? '') : formatOnlineValue(row[column])}</td>`).join('')}</tr>`).join('');
     online$('#onlineEmpty').style.display = rows.length ? 'none' : 'block';
+
+    const restoreButton = online$('#onlineRestoreColumns');
+    if (restoreButton) restoreButton.hidden = onlineState.columns.length === onlineState.allColumns.length;
 
     const badge = online$('#onlineDateBadge');
     if (badge) {
@@ -298,7 +330,8 @@ online$('#onlineProcess').onclick = async () => {
         if (!response.ok) throw Error(data.error);
 
         onlineState.rawRows = data.rows;
-        onlineState.columns = data.columns;
+        onlineState.allColumns = [...data.columns];
+        onlineState.columns = [...data.columns];
 
         if (onlineState.reactorMapActive) {
             let reactorRows = onlineState.reactorRows.length ? onlineState.reactorRows : getStoredReactorRows();
@@ -359,6 +392,11 @@ online$('#onlineReactorMapToggle').onclick = async () => {
 
 online$('#onlineSearch').oninput = renderOnlineTable;
 online$('#onlineReactorFilter').onchange = renderOnlineTable;
+online$('#onlineRestoreColumns').onclick = () => {
+    onlineState.columns = [...onlineState.allColumns];
+    saveOnlineState();
+    renderOnlineTable();
+};
 if (online$('#onlineFrom')) online$('#onlineFrom').oninput = () => { saveOnlineState(); renderOnlineTable(); };
 if (online$('#onlineTo')) online$('#onlineTo').oninput = () => { saveOnlineState(); renderOnlineTable(); };
 if (online$('#onlineClearDates')) online$('#onlineClearDates').onclick = () => {
@@ -369,7 +407,7 @@ if (online$('#onlineClearDates')) online$('#onlineClearDates').onclick = () => {
     renderOnlineTable();
 };
 
-restoreOnlineState();
+const shouldRefreshOnlineSchema = restoreOnlineState();
 const initialStored = getStoredReactorRows();
 if (initialStored) onlineState.reactorRows = initialStored;
 if (onlineState.reactorMapActive && onlineState.rawRows.length) {
@@ -378,3 +416,6 @@ if (onlineState.reactorMapActive && onlineState.rawRows.length) {
 updateToggleButtonVisuals();
 renderReactorFilter();
 renderOnlineTable();
+if (shouldRefreshOnlineSchema) {
+    online$('#onlineProcess').click();
+}

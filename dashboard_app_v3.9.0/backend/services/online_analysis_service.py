@@ -44,13 +44,10 @@ def process_online_file(file_path):
     except (LookupError, UnicodeDecodeError):
         frame = pd.read_csv(path, delimiter="\t", encoding="utf-8-sig")
 
-    missing = [column for column in ONLINE_COLUMNS if column not in frame.columns]
-    if missing:
-        raise ValueError(
-            f"Online Analysis file is missing columns: {', '.join(missing)}"
-        )
+    if "Date/Time" not in frame.columns:
+        raise ValueError("Online Analysis file is missing column: Date/Time")
 
-    frame = frame[ONLINE_COLUMNS].copy()
+    frame = frame.copy()
     try:
         frame["Date/Time"] = pd.to_datetime(
             frame["Date/Time"], format="%d.%m.%Y %H:%M:%S"
@@ -60,13 +57,22 @@ def process_online_file(file_path):
             "Date/Time values must use the format DD.MM.YYYY HH:MM:SS."
         ) from error
 
-    frame = frame.rename(
-        columns={"Date/Time": "DateTime", "Sampled_reactor": "Reactor"}
-    )
+    frame = frame.rename(columns={"Date/Time": "DateTime"})
+    if "Sampled_reactor" in frame.columns:
+        frame = frame.rename(columns={"Sampled_reactor": "Reactor"})
     frame["DateTime"] = frame["DateTime"].dt.strftime("%Y-%m-%d %H:%M:%S")
     frame = frame.where(pd.notna(frame), None)
 
-    columns = ["DateTime", "Reactor", *ONLINE_COLUMNS[2:]]
+    excluded_prefixes = ("Conc", "RT", "Name", "Area")
+    columns = [
+        "DateTime",
+        *[
+            column
+            for column in frame.columns
+            if column != "DateTime" and not column.startswith(excluded_prefixes)
+        ],
+    ]
+    frame = frame[columns]
     return {
         "rows": frame.to_dict(orient="records"),
         "columns": columns,
@@ -164,4 +170,3 @@ def apply_reactor_map_to_online_rows(online_rows, reactor_rows):
             r_copy["Reactor"] = mapped
         updated.append(r_copy)
     return updated
-
