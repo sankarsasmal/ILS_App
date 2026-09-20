@@ -11,7 +11,9 @@ def test_endpoints():
     assert c.get("/frontend/online_analysis.html").status_code == 200
     assert c.get("/calculation-table").status_code == 200
     assert c.get("/frontend/calculation_table.html").status_code == 200
-    assert c.get("/api/health").json["version"] == "3.4.0"
+    assert c.get("/plots").status_code == 200
+    assert c.get("/frontend/plots.html").status_code == 200
+    assert c.get("/api/health").json["version"] == "3.9.0"
 
 
 def test_process_online_file(tmp_path):
