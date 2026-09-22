@@ -46,6 +46,19 @@
             white-space: nowrap;
         }
 
+        .plot-axis-swap-group {
+            flex: 0 0 auto;
+            min-width: 0;
+        }
+
+        .plot-swap-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 42px;
+            white-space: nowrap;
+        }
+
         .plot-control-group select.input,
         .plot-control-group select {
             width: 100%;
@@ -189,6 +202,76 @@
             display: block;
         }
 
+        .axis-limit-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .axis-limit-wrap {
+            position: relative;
+        }
+
+        .axis-limit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .axis-limit-btn svg {
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .axis-limit-btn.open svg {
+            transform: rotate(180deg);
+        }
+
+        .axis-limit-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 200px;
+            background: #ffffff;
+            border: 1px solid rgba(7, 26, 45, 0.25);
+            border-radius: 8px;
+            box-shadow: 0 16px 40px rgba(7, 26, 45, 0.28);
+            z-index: 9999;
+            padding: 12px;
+            box-sizing: border-box;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .axis-limit-menu.open {
+            display: flex;
+        }
+
+        .axis-limit-menu label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--slate, #475569);
+        }
+
+        .axis-limit-menu input {
+            height: 36px;
+        }
+
+        .axis-limit-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
         .reactor-menu-header {
             display: flex;
             justify-content: space-between;
@@ -259,7 +342,7 @@
         .chart-container-card {
             margin-top: 20px;
             padding: 0;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .chart-head-bar {
@@ -271,6 +354,8 @@
             flex-wrap: wrap;
             gap: 12px;
             background: rgba(251, 245, 233, 0.98);
+            position: relative;
+            z-index: 30;
         }
 
         .chart-custom-legend {
@@ -404,6 +489,16 @@
                             </select>
                         </div>
 
+                        <div class="plot-control-group plot-axis-swap-group">
+                            <label>&nbsp;</label>
+                            <button type="button" class="btn secondary plot-swap-btn" id="plotSwapAxes" title="Swap X and Y axis parameters" aria-label="Swap X and Y axis parameters">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M7 3v14M3 13l4 4 4-4M17 21V7M13 11l4-4 4 4" />
+                                </svg>
+                                <span>Swap X/Y</span>
+                            </button>
+                        </div>
+
                         <div class="plot-control-group">
                             <label for="plotYSelect">Y Axis (Dependent)</label>
                             <select class="input" id="plotYSelect" aria-label="Select Y axis parameter">
@@ -455,6 +550,36 @@
                         <div>
                             <div class="eyebrow" id="plotEyebrow">SCATTER PLOT · X VS Y</div>
                             <h3 id="plotChartTitle">Scatter Plot</h3>
+                        </div>
+                        <div class="axis-limit-controls">
+                            <div class="axis-limit-wrap" id="xAxisLimitWrap">
+                                <button type="button" class="btn secondary axis-limit-btn" id="xAxisLimitBtn" aria-expanded="false" aria-haspopup="true" title="Set X axis min/max limits">
+                                    X Axis Limits
+                                    <svg class="dropdown-chevron" width="10" height="6" viewBox="0 0 10 6" fill="currentColor"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                                </button>
+                                <div class="axis-limit-menu" id="xAxisLimitMenu" role="menu">
+                                    <label>Min<input type="number" class="input" id="xAxisMin" placeholder="Auto" step="any"></label>
+                                    <label>Max<input type="number" class="input" id="xAxisMax" placeholder="Auto" step="any"></label>
+                                    <div class="axis-limit-actions">
+                                        <button type="button" class="filter-link" id="xAxisLimitReset">Reset</button>
+                                        <button type="button" class="btn primary axis-limit-apply" id="xAxisLimitApply">Apply</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="axis-limit-wrap" id="yAxisLimitWrap">
+                                <button type="button" class="btn secondary axis-limit-btn" id="yAxisLimitBtn" aria-expanded="false" aria-haspopup="true" title="Set Y axis min/max limits">
+                                    Y Axis Limits
+                                    <svg class="dropdown-chevron" width="10" height="6" viewBox="0 0 10 6" fill="currentColor"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                                </button>
+                                <div class="axis-limit-menu" id="yAxisLimitMenu" role="menu">
+                                    <label>Min<input type="number" class="input" id="yAxisMin" placeholder="Auto" step="any"></label>
+                                    <label>Max<input type="number" class="input" id="yAxisMax" placeholder="Auto" step="any"></label>
+                                    <div class="axis-limit-actions">
+                                        <button type="button" class="filter-link" id="yAxisLimitReset">Reset</button>
+                                        <button type="button" class="btn primary axis-limit-apply" id="yAxisLimitApply">Apply</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="online-filter-badge" id="plotBadge"></div>
                     </div>

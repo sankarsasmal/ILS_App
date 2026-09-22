@@ -576,37 +576,45 @@ async function syncDirectFromFile() {
             })
         });
 
-        if (res.ok) {
-            const data = await res.json();
-            if (data && Array.isArray(data.rows) && data.rows.length) {
-                calcState.columns = data.columns;
-                calcState.allRows = data.rows;
-                calcState.sourceFile = data.source_file || '';
-                try {
-                    sessionStorage.setItem('ils_base_table_state', JSON.stringify({
-                        rows: calcState.allRows,
-                        columns: calcState.columns
-                    }));
-                } catch (e) {}
-
-                updateKpis();
-                renderReactorFilter();
-                renderBaseTable();
-
-                if (calc$('#calcSummary')) {
-                    const fileName = calcState.sourceFile ? calcState.sourceFile.split(/[\\/]/).pop() : 'Online Analysis';
-                    calc$('#calcSummary').textContent = `Connected with Online Analysis (${fileName}) · ${data.record_count} records · Base Table reconstructed (${calcState.columns.length} active columns)`;
-                }
-                if (calc$('#calcStatus')) calc$('#calcStatus').textContent = 'Ready';
-                return;
-            }
+        let data = null;
+        try {
+            data = await res.json();
+        } catch (parseErr) {
+            console.error('Sync from Online Analysis: failed to parse server response', parseErr);
         }
 
-        // Neither session storage nor backend active online file is available
-        showCalcError('No Online Analysis data loaded yet. Please import or load a SystemTxt file on the Online Analysis page first.');
-        if (calc$('#calcStatus')) calc$('#calcStatus').textContent = 'Ready';
+        if (res.ok && data && Array.isArray(data.rows) && data.rows.length) {
+            calcState.columns = data.columns;
+            calcState.allRows = data.rows;
+            calcState.sourceFile = data.source_file || '';
+            try {
+                sessionStorage.setItem('ils_base_table_state', JSON.stringify({
+                    rows: calcState.allRows,
+                    columns: calcState.columns
+                }));
+            } catch (e) {}
+
+            updateKpis();
+            renderReactorFilter();
+            renderBaseTable();
+
+            if (calc$('#calcSummary')) {
+                const fileName = calcState.sourceFile ? calcState.sourceFile.split(/[\\/]/).pop() : 'Online Analysis';
+                calc$('#calcSummary').textContent = `Connected with Online Analysis (${fileName}) · ${data.record_count} records · Base Table reconstructed (${calcState.columns.length} active columns)`;
+            }
+            if (calc$('#calcStatus')) calc$('#calcStatus').textContent = 'Ready';
+            return;
+        }
+
+        // Neither session storage nor backend active online file produced data.
+        // Surface the backend's specific error instead of a generic message when available.
+        const backendMessage = data && data.error;
+        showCalcError(backendMessage || 'No Online Analysis data loaded yet. Please import or load a SystemTxt file on the Online Analysis page first.');
+        if (!res.ok) console.error(`Sync from Online Analysis failed (HTTP ${res.status}):`, backendMessage || '(no error message returned)');
+        if (calc$('#calcStatus')) calc$('#calcStatus').textContent = res.ok ? 'Ready' : 'Failed';
     } catch (err) {
-        showCalcError(err.message || 'Failed to sync with Online Analysis.');
+        console.error('Sync from Online Analysis: request failed', err);
+        showCalcError(err.message || 'Failed to sync with Online Analysis. Check your network connection and try again.');
         if (calc$('#calcStatus')) calc$('#calcStatus').textContent = 'Failed';
     } finally {
         if (btn) {

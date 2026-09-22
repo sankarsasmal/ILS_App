@@ -561,6 +561,10 @@ function syncAllDataSources() {
             }
         } catch (e) {}
 
+        const firstRowTime = customState.onlineRows.length
+            ? parseDateTimeSafe(customState.onlineRows[0].DateTime || customState.onlineRows[0]['Date/Time'])
+            : null;
+
         const reconstructed = customState.onlineRows.map((row, idx) => {
             const rNum = parseInt(String(row.Reactor || row.Sampled_reactor || '').replace(/[Rr]/g, '').trim(), 10);
             const ficCol = rNum ? FIC_MAPPING[rNum] : null;
@@ -593,11 +597,15 @@ function syncAllDataSources() {
 
             const dt = row.DateTime || row['Date/Time'] || '';
             const reactor = row.Reactor || row.Sampled_reactor || '';
+            const rowTime = idx === 0 ? firstRowTime : parseDateTimeSafe(dt);
+            const tosHours = (idx === 0 || !firstRowTime || !rowTime)
+                ? (idx === 0 ? 0.0 : null)
+                : (rowTime.getTime() - firstRowTime.getTime()) / 3600000;
 
             return {
                 DateTime: dt,
                 Reactor: reactor,
-                'TOS[h]': idx === 0 ? 0.0 : idx * 1.0,
+                'TOS[h]': tosHours,
                 ESTD_H2: estdH2,
                 ESTD_N2: estdN2,
                 'N2[SLPH]': n2Slph,

@@ -12,79 +12,80 @@
     const $ = selector => document.querySelector(selector);
     const $$ = selector => Array.from(document.querySelectorAll(selector));
 
-    // Standard Reactor Visual Configuration: Distinct Colors & Distinct Point Styles
+    // Standard Reactor Visual Configuration: all markers are circles, distinguished by
+    // border color and fill transparency (alpha) per reactor.
     const REACTOR_THEME = {
         'R1': {
             label: 'R1',
             border: '#eb5e28',          // Warm Terracotta
-            bg: 'rgba(235, 94, 40, 0.82)',
+            bg: 'rgba(235, 94, 40, 0.92)',
             pointStyle: 'circle',
-            symbolName: 'Circle (●)',
-            svg: '<circle cx="8" cy="8" r="5.5" fill="#eb5e28" stroke="#ffffff" stroke-width="1.5" />'
+            symbolName: 'Circle · 92% fill',
+            svg: '<circle cx="8" cy="8" r="5.5" fill="#eb5e28" fill-opacity="0.92" stroke="#eb5e28" stroke-width="1.5" />'
         },
         'R2': {
             label: 'R2',
             border: '#2563eb',          // Royal Blue
-            bg: 'rgba(37, 99, 235, 0.82)',
-            pointStyle: 'triangle',
-            symbolName: 'Triangle (▲)',
-            svg: '<polygon points="8,2 14.5,13.5 1.5,13.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.5" />'
+            bg: 'rgba(37, 99, 235, 0.80)',
+            pointStyle: 'circle',
+            symbolName: 'Circle · 80% fill',
+            svg: '<circle cx="8" cy="8" r="5.5" fill="#2563eb" fill-opacity="0.80" stroke="#2563eb" stroke-width="1.5" />'
         },
         'R3': {
             label: 'R3',
             border: '#059669',          // Emerald Green
-            bg: 'rgba(5, 150, 105, 0.82)',
-            pointStyle: 'rect',
-            symbolName: 'Square (■)',
-            svg: '<rect x="2.5" y="2.5" width="11" height="11" fill="#059669" stroke="#ffffff" stroke-width="1.5" />'
+            bg: 'rgba(5, 150, 105, 0.68)',
+            pointStyle: 'circle',
+            symbolName: 'Circle · 68% fill',
+            svg: '<circle cx="8" cy="8" r="5.5" fill="#059669" fill-opacity="0.68" stroke="#059669" stroke-width="1.5" />'
         },
         'R4': {
             label: 'R4',
             border: '#7c3aed',          // Violet Purple
-            bg: 'rgba(124, 58, 237, 0.82)',
-            pointStyle: 'rectRot',
-            symbolName: 'Diamond (◆)',
-            svg: '<polygon points="8,1.5 14.5,8 8,14.5 1.5,8" fill="#7c3aed" stroke="#ffffff" stroke-width="1.5" />'
+            bg: 'rgba(124, 58, 237, 0.56)',
+            pointStyle: 'circle',
+            symbolName: 'Circle · 56% fill',
+            svg: '<circle cx="8" cy="8" r="5.5" fill="#7c3aed" fill-opacity="0.56" stroke="#7c3aed" stroke-width="1.5" />'
         },
         'R5': {
             label: 'R5',
             border: '#d97706',          // Amber Ochre
-            bg: 'rgba(217, 119, 6, 0.82)',
-            pointStyle: 'star',
-            symbolName: 'Star (★)',
-            svg: '<polygon points="8,1 10,6 15,6 11,10 13,15 8,12 3,15 5,10 1,6 6,6" fill="#d97706" stroke="#ffffff" stroke-width="1" />'
+            bg: 'rgba(217, 119, 6, 0.44)',
+            pointStyle: 'circle',
+            symbolName: 'Circle · 44% fill',
+            svg: '<circle cx="8" cy="8" r="5.5" fill="#d97706" fill-opacity="0.44" stroke="#d97706" stroke-width="1.5" />'
         },
         'R6': {
             label: 'R6',
             border: '#0891b2',          // Cyan Teal
-            bg: 'rgba(8, 145, 178, 0.82)',
-            pointStyle: 'cross',
-            symbolName: 'Plus (+)',
-            svg: '<line x1="8" y1="2" x2="8" y2="14" stroke="#0891b2" stroke-width="3" stroke-linecap="round" /><line x1="2" y1="8" x2="14" y2="8" stroke="#0891b2" stroke-width="3" stroke-linecap="round" />'
+            bg: 'rgba(8, 145, 178, 0.32)',
+            pointStyle: 'circle',
+            symbolName: 'Circle · 32% fill',
+            svg: '<circle cx="8" cy="8" r="5.5" fill="#0891b2" fill-opacity="0.32" stroke="#0891b2" stroke-width="1.5" />'
         },
         'R7': {
             label: 'R7',
             border: '#db2777',          // Deep Rose
-            bg: 'rgba(219, 39, 119, 0.82)',
-            pointStyle: 'crossRot',
-            symbolName: 'Cross (✕)',
-            svg: '<line x1="3" y1="3" x2="13" y2="13" stroke="#db2777" stroke-width="3" stroke-linecap="round" /><line x1="13" y1="3" x2="3" y2="13" stroke="#db2777" stroke-width="3" stroke-linecap="round" />'
+            bg: 'rgba(219, 39, 119, 0.22)',
+            pointStyle: 'circle',
+            symbolName: 'Circle · 22% fill',
+            svg: '<circle cx="8" cy="8" r="5.5" fill="#db2777" fill-opacity="0.22" stroke="#db2777" stroke-width="1.5" />'
         },
         'R8': {
             label: 'R8',
             border: '#475569',          // Slate Charcoal
-            bg: 'rgba(71, 85, 105, 0.82)',
-            pointStyle: 'rectRounded',
-            symbolName: 'Rounded Square (▢)',
-            svg: '<rect x="2.5" y="2.5" width="11" height="11" rx="3.5" fill="#475569" stroke="#ffffff" stroke-width="1.5" />'
+            bg: 'rgba(71, 85, 105, 0.14)',
+            pointStyle: 'circle',
+            symbolName: 'Circle · 14% fill',
+            svg: '<circle cx="8" cy="8" r="5.5" fill="#475569" fill-opacity="0.14" stroke="#475569" stroke-width="1.5" />'
         },
         'Default': {
             label: 'Other',
             border: '#c15f3e',
-            bg: 'rgba(193, 95, 62, 0.82)',
+            bg: 'rgba(193, 95, 62, 0.5)',
             pointStyle: 'circle',
-            symbolName: 'Circle',
-            svg: '<circle cx="8" cy="8" r="5.5" fill="#c15f3e" stroke="#ffffff" stroke-width="1.5" />'
+            symbolName: 'Circle · 50% fill',
+            svg: '<circle cx="8" cy="8" r="5.5" fill="#c15f3e" fill-opacity="0.5" stroke="#c15f3e" stroke-width="1.5" />'
         }
     };
 
@@ -169,7 +170,11 @@
         allKnownReactors: [...STANDARD_REACTORS],
         selectedReactors: new Set([...STANDARD_REACTORS]),
         fromDate: '',
-        toDate: ''
+        toDate: '',
+        xMin: null,
+        xMax: null,
+        yMin: null,
+        yMax: null
     };
 
     function showError(message) {
@@ -1163,6 +1168,8 @@
                     x: {
                         type: 'linear',
                         position: 'bottom',
+                        min: plotState.xMin !== null ? plotState.xMin : undefined,
+                        max: plotState.xMax !== null ? plotState.xMax : undefined,
                         title: {
                             display: true,
                             text: xLabel,
@@ -1185,6 +1192,8 @@
                     y: {
                         type: 'linear',
                         position: 'left',
+                        min: plotState.yMin !== null ? plotState.yMin : undefined,
+                        max: plotState.yMax !== null ? plotState.yMax : undefined,
                         title: {
                             display: true,
                             text: yLabel,
@@ -1260,11 +1269,84 @@
     }
 
     /**
+     * Sync the axis limit popover inputs with current plotState values
+     */
+    function syncAxisLimitInputs() {
+        const xMinInput = $('#xAxisMin');
+        const xMaxInput = $('#xAxisMax');
+        const yMinInput = $('#yAxisMin');
+        const yMaxInput = $('#yAxisMax');
+        if (xMinInput) xMinInput.value = plotState.xMin !== null ? plotState.xMin : '';
+        if (xMaxInput) xMaxInput.value = plotState.xMax !== null ? plotState.xMax : '';
+        if (yMinInput) yMinInput.value = plotState.yMin !== null ? plotState.yMin : '';
+        if (yMaxInput) yMaxInput.value = plotState.yMax !== null ? plotState.yMax : '';
+    }
+
+    /**
+     * Wire the X/Y axis limit popover buttons (open/close, apply, reset)
+     */
+    function setupAxisLimitControls() {
+        function wireAxis(axisKey, btnId, menuId, minId, maxId, resetId, applyId) {
+            const btn = $(btnId);
+            const menu = $(menuId);
+            const minInput = $(minId);
+            const maxInput = $(maxId);
+            const resetBtn = $(resetId);
+            const applyBtn = $(applyId);
+            if (!btn || !menu) return;
+
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const isOpen = menu.classList.toggle('open');
+                btn.classList.toggle('open', isOpen);
+                btn.setAttribute('aria-expanded', String(isOpen));
+            });
+
+            menu.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+
+            document.addEventListener('click', function () {
+                menu.classList.remove('open');
+                btn.classList.remove('open');
+                btn.setAttribute('aria-expanded', 'false');
+            });
+
+            if (applyBtn) {
+                applyBtn.addEventListener('click', function () {
+                    const minVal = minInput && minInput.value !== '' ? Number(minInput.value) : null;
+                    const maxVal = maxInput && maxInput.value !== '' ? Number(maxInput.value) : null;
+                    plotState[`${axisKey}Min`] = (minVal !== null && !isNaN(minVal)) ? minVal : null;
+                    plotState[`${axisKey}Max`] = (maxVal !== null && !isNaN(maxVal)) ? maxVal : null;
+                    menu.classList.remove('open');
+                    btn.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                    renderPlot();
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function () {
+                    plotState[`${axisKey}Min`] = null;
+                    plotState[`${axisKey}Max`] = null;
+                    if (minInput) minInput.value = '';
+                    if (maxInput) maxInput.value = '';
+                    renderPlot();
+                });
+            }
+        }
+
+        wireAxis('x', '#xAxisLimitBtn', '#xAxisLimitMenu', '#xAxisMin', '#xAxisMax', '#xAxisLimitReset', '#xAxisLimitApply');
+        wireAxis('y', '#yAxisLimitBtn', '#yAxisLimitMenu', '#yAxisMin', '#yAxisMax', '#yAxisLimitReset', '#yAxisLimitApply');
+    }
+
+    /**
      * Setup Event Listeners
      */
     function setupEvents() {
         const xSelect = $('#plotXSelect');
         const ySelect = $('#plotYSelect');
+        const swapAxesBtn = $('#plotSwapAxes');
         const reactorFilter = $('#plotReactorFilter');
         const reactorBtn = $('#plotReactorBtn');
         const reactorMenu = $('#plotReactorMenu');
@@ -1308,6 +1390,29 @@
                 renderPlot();
             });
         }
+
+        // Swap X and Y axis selections
+        if (swapAxesBtn) {
+            swapAxesBtn.addEventListener('click', function () {
+                const currentX = plotState.selectedX;
+                const currentY = plotState.selectedY;
+                if (!currentX || !currentY) return;
+                plotState.selectedX = currentY;
+                plotState.selectedY = currentX;
+
+                const currentXMin = plotState.xMin, currentXMax = plotState.xMax;
+                plotState.xMin = plotState.yMin;
+                plotState.xMax = plotState.yMax;
+                plotState.yMin = currentXMin;
+                plotState.yMax = currentXMax;
+                syncAxisLimitInputs();
+
+                renderDropdownOptions();
+                renderPlot();
+            });
+        }
+
+        setupAxisLimitControls();
 
         // Multi-Select Reactor Dropdown Button & Menu
         if (reactorBtn && reactorMenu) {
