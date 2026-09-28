@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 from flask import Flask, send_from_directory
 from backend.routes.api import api
-from backend.routes.historian_api import historian_api
 
 BASE = Path(__file__).resolve().parent
 
@@ -20,7 +19,6 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
     app.register_blueprint(api)
-    app.register_blueprint(historian_api)
 
     @app.get("/")
     @app.get("/run-plan")
@@ -55,10 +53,6 @@ def create_app(test_config=None):
     @app.get("/plots.html")
     def plots_view():
         return send_from_directory(BASE / "frontend", "plots.html")
-
-    @app.get("/history")
-    def history_view():
-        return send_from_directory(BASE / "frontend", "history.html")
 
     @app.get("/frontend/<path:path>")
     def frontend(path):

@@ -8,8 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const isPlots = path.endsWith('/plots.html') || path.endsWith('/plots') || path.includes('/frontend/plots.html');
     const isRunPlan = path === '/' || path.endsWith('/run_plan.html') || path.endsWith('/run-plan') || path.endsWith('/run_plan') || path.includes('/frontend/run_plan.html');
     const isOnline = path.endsWith('/online_analysis.html') || path.endsWith('/online-analysis') || path.endsWith('/online_analysis');
-    const isHistory = path.endsWith('/history.html') || path.endsWith('/history');
-    const isOffline = !isRunPlan && !isOnline && !isCalculation && !isCustom && !isPlots && !isHistory;
+    const isOffline = !isRunPlan && !isOnline && !isCalculation && !isCustom && !isPlots;
 
     header.insertAdjacentHTML(
         'afterend',
@@ -20,14 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `<a aria-current="${isCalculation ? 'page' : 'false'}" class="analysis-tab${isCalculation ? ' active' : ''}" href="/frontend/calculation_table.html">Calculation table</a>` +
         `<a aria-current="${isCustom ? 'page' : 'false'}" class="analysis-tab${isCustom ? ' active' : ''}" href="/frontend/custom_table.html">Custom table</a>` +
         `<a aria-current="${isPlots ? 'page' : 'false'}" class="analysis-tab${isPlots ? ' active' : ''}" href="/frontend/plots.html">Plots</a>` +
-        `<a aria-current="${isHistory ? 'page' : 'false'}" class="analysis-tab${isHistory ? ' active' : ''}" href="/frontend/history.html">History</a>` +
         `</nav>`
     );
-
-    // Manual Historian save button (logic lives in historian_save.js)
-    const historianScript = document.createElement('script');
-    historianScript.src = '/frontend/js/historian_save.js';
-    document.head.appendChild(historianScript);
 
     // Run Number state management
     const RUN_NUMBER_KEY = 'ils_run_number';
