@@ -1,0 +1,1 @@
+Copy the contents of this update folder into your existing dashboard_app folder, preserving the same relative paths. Before copying, duplicate your current dashboard_app folder as dashboard_app_v1.1.0_backup. Restart run_dashboard.bat after replacement.
